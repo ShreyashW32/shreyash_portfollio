@@ -1,5 +1,5 @@
 // ========================================
-// Canvas 2D Particle Background
+// Neural Network Canvas Background
 // ========================================
 (function () {
   const canvas = document.getElementById('bg-canvas');
@@ -7,29 +7,42 @@
   const ctx = canvas.getContext('2d');
 
   let width, height;
-  let particles = [];
+  let neurons = [];
+  let signals = [];
   let mouse = { x: -1000, y: -1000 };
-  const PARTICLE_COUNT_DESKTOP = 80;
-  const PARTICLE_COUNT_MOBILE = 35;
-  const CONNECTION_DISTANCE = 140;
-  const MOUSE_RADIUS = 180;
+  let time = 0;
+
+  const NEURON_COUNT_DESKTOP = 70;
+  const NEURON_COUNT_MOBILE = 30;
+  const SYNAPSE_DISTANCE = 180;
+  const MOUSE_RADIUS = 220;
+  const SIGNAL_SPEED = 2.5;
+  const SIGNAL_SPAWN_RATE = 0.012; // chance per frame per synapse
 
   function resize() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
   }
 
-  class Particle {
+  class Neuron {
     constructor() {
       this.x = Math.random() * width;
       this.y = Math.random() * height;
-      this.vx = (Math.random() - 0.5) * 0.4;
-      this.vy = (Math.random() - 0.5) * 0.4;
-      this.radius = Math.random() * 1.5 + 0.5;
-      // Cyan-to-indigo palette
-      const hue = 180 + Math.random() * 60; // 180 (cyan) to 240 (indigo)
-      this.color = `hsla(${hue}, 80%, 65%, 0.6)`;
-      this.lineColor = hue;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.baseRadius = Math.random() * 2 + 1.2;
+      this.radius = this.baseRadius;
+      this.pulseOffset = Math.random() * Math.PI * 2;
+      this.pulseSpeed = 0.02 + Math.random() * 0.015;
+      // Neuron types: soma (large, bright) vs interneuron (small, dimmer)
+      this.isSoma = Math.random() < 0.2;
+      if (this.isSoma) {
+        this.baseRadius = Math.random() * 2 + 2.5;
+        this.radius = this.baseRadius;
+      }
+      const hue = 180 + Math.random() * 50;
+      this.hue = hue;
+      this.firing = 0; // 0–1 firing intensity
     }
 
     update() {
@@ -38,59 +51,145 @@
 
       if (this.x < 0 || this.x > width) this.vx *= -1;
       if (this.y < 0 || this.y > height) this.vy *= -1;
-
-      // Clamp
       this.x = Math.max(0, Math.min(width, this.x));
       this.y = Math.max(0, Math.min(height, this.y));
+
+      // Pulse radius
+      const pulse = Math.sin(time * this.pulseSpeed + this.pulseOffset);
+      this.radius = this.baseRadius + pulse * 0.6;
+
+      // Decay firing
+      this.firing *= 0.94;
+
+      // Mouse proximity triggers firing
+      const mdx = this.x - mouse.x;
+      const mdy = this.y - mouse.y;
+      const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
+      if (mDist < MOUSE_RADIUS * 0.6) {
+        this.firing = Math.min(this.firing + 0.08, 1);
+      }
     }
 
     draw() {
+      const glowIntensity = 0.3 + this.firing * 0.7;
+      const alpha = this.isSoma ? 0.7 + this.firing * 0.3 : 0.45 + this.firing * 0.35;
+
+      // Outer glow
+      if (this.isSoma || this.firing > 0.1) {
+        const glowRadius = this.radius * (2.5 + this.firing * 3);
+        const gradient = ctx.createRadialGradient(
+          this.x, this.y, 0,
+          this.x, this.y, glowRadius
+        );
+        gradient.addColorStop(0, `hsla(${this.hue}, 85%, 65%, ${glowIntensity * 0.2})`);
+        gradient.addColorStop(1, `hsla(${this.hue}, 85%, 65%, 0)`);
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, glowRadius, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+      }
+
+      // Core
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fillStyle = this.color;
+      ctx.fillStyle = `hsla(${this.hue}, 80%, 70%, ${alpha})`;
+      ctx.fill();
+    }
+  }
+
+  class Signal {
+    constructor(fromNeuron, toNeuron) {
+      this.from = fromNeuron;
+      this.to = toNeuron;
+      this.progress = 0; // 0 to 1
+      this.speed = SIGNAL_SPEED / Math.sqrt(
+        (toNeuron.x - fromNeuron.x) ** 2 + (toNeuron.y - fromNeuron.y) ** 2
+      );
+      this.alive = true;
+      this.hue = (fromNeuron.hue + toNeuron.hue) / 2;
+    }
+
+    update() {
+      this.progress += this.speed;
+      if (this.progress >= 1) {
+        this.alive = false;
+        this.to.firing = Math.min(this.to.firing + 0.35, 1);
+      }
+    }
+
+    draw() {
+      const x = this.from.x + (this.to.x - this.from.x) * this.progress;
+      const y = this.from.y + (this.to.y - this.from.y) * this.progress;
+      const alpha = 0.6 + Math.sin(this.progress * Math.PI) * 0.4;
+      const r = 1.8 + Math.sin(this.progress * Math.PI) * 1.2;
+
+      // Glow
+      const gradient = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
+      gradient.addColorStop(0, `hsla(${this.hue}, 90%, 75%, ${alpha * 0.4})`);
+      gradient.addColorStop(1, `hsla(${this.hue}, 90%, 75%, 0)`);
+      ctx.beginPath();
+      ctx.arc(x, y, r * 4, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // Core dot
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${this.hue}, 90%, 80%, ${alpha})`;
       ctx.fill();
     }
   }
 
   function init() {
     resize();
-    particles = [];
-    const count = width < 768 ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
+    neurons = [];
+    signals = [];
+    const count = width < 768 ? NEURON_COUNT_MOBILE : NEURON_COUNT_DESKTOP;
     for (let i = 0; i < count; i++) {
-      particles.push(new Particle());
+      neurons.push(new Neuron());
     }
   }
 
-  function connectParticles() {
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
+  function drawSynapses() {
+    for (let i = 0; i < neurons.length; i++) {
+      for (let j = i + 1; j < neurons.length; j++) {
+        const dx = neurons[i].x - neurons[j].x;
+        const dy = neurons[i].y - neurons[j].y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist < CONNECTION_DISTANCE) {
-          const opacity = (1 - dist / CONNECTION_DISTANCE) * 0.15;
+        if (dist < SYNAPSE_DISTANCE) {
+          const proximity = 1 - dist / SYNAPSE_DISTANCE;
+          const firingBoost = (neurons[i].firing + neurons[j].firing) * 0.3;
+          const opacity = proximity * (0.08 + firingBoost);
+
           ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(0, 242, 254, ${opacity})`;
-          ctx.lineWidth = 0.5;
+          ctx.moveTo(neurons[i].x, neurons[i].y);
+          ctx.lineTo(neurons[j].x, neurons[j].y);
+          ctx.strokeStyle = `rgba(0, 242, 254, ${Math.min(opacity, 0.35)})`;
+          ctx.lineWidth = 0.4 + proximity * 0.6;
           ctx.stroke();
+
+          // Spawn signals along active synapses
+          if ((neurons[i].firing > 0.2 || neurons[j].firing > 0.2) && Math.random() < SIGNAL_SPAWN_RATE) {
+            const from = neurons[i].firing > neurons[j].firing ? neurons[i] : neurons[j];
+            const to = from === neurons[i] ? neurons[j] : neurons[i];
+            signals.push(new Signal(from, to));
+          }
         }
       }
 
-      // Mouse connections
-      const mdx = particles[i].x - mouse.x;
-      const mdy = particles[i].y - mouse.y;
+      // Mouse dendrite connections
+      const mdx = neurons[i].x - mouse.x;
+      const mdy = neurons[i].y - mouse.y;
       const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
 
       if (mDist < MOUSE_RADIUS) {
-        const opacity = (1 - mDist / MOUSE_RADIUS) * 0.25;
+        const opacity = (1 - mDist / MOUSE_RADIUS) * 0.2;
         ctx.beginPath();
-        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.moveTo(neurons[i].x, neurons[i].y);
         ctx.lineTo(mouse.x, mouse.y);
         ctx.strokeStyle = `rgba(99, 102, 241, ${opacity})`;
-        ctx.lineWidth = 0.6;
+        ctx.lineWidth = 0.5;
         ctx.stroke();
       }
     }
@@ -98,13 +197,28 @@
 
   function animate() {
     ctx.clearRect(0, 0, width, height);
+    time++;
 
-    particles.forEach(p => {
-      p.update();
-      p.draw();
+    neurons.forEach(n => {
+      n.update();
+      n.draw();
     });
 
-    connectParticles();
+    drawSynapses();
+
+    // Update & draw signals
+    signals.forEach(s => {
+      s.update();
+      s.draw();
+    });
+    signals = signals.filter(s => s.alive);
+
+    // Spontaneous random firing to keep the network alive
+    if (Math.random() < 0.008) {
+      const rn = neurons[Math.floor(Math.random() * neurons.length)];
+      rn.firing = Math.min(rn.firing + 0.5, 1);
+    }
+
     requestAnimationFrame(animate);
   }
 
@@ -429,38 +543,58 @@ const botResponses = {
   default: "I'm not completely sure about that. Try asking about 'skills', 'experience', 'NVIDIA', 'publications', 'education', or 'contact'!"
 };
 
-// Keyword matcher function
+// Keyword matcher function — uses word-boundary checks to avoid false substring matches
 const getBotResponse = (input) => {
   const query = input.toLowerCase().trim();
   
-  if (query.includes('who are you') || query.includes('what are you') || query.includes('your name') || query.includes('identity')) {
+  // Helper: check if any keyword appears as a whole word (or phrase) in the query
+  const hasWord = (...words) => words.some(w => {
+    if (w.includes(' ')) return query.includes(w); // multi-word phrases use simple includes
+    return new RegExp(`\\b${w}\\b`).test(query);
+  });
+
+  // Identity
+  if (hasWord('who are you', 'what are you', 'your name', 'identity', 'assistant')) {
     return botResponses.assistant_identity;
   }
-  if (query.includes('who is shreyash') || query.includes('about shreyash') || query.includes('tell me about shreyash') || query.includes('profile')) {
+  // About Shreyash
+  if (hasWord('who is shreyash', 'about shreyash', 'tell me about shreyash', 'tell me about him', 'profile', 'introduce')) {
     return botResponses.who_is;
   }
-  if (query.includes('hi') || query.includes('hello') || query.includes('hey') || query.includes('greet') || query.includes('welcome')) {
+  // Greetings — use word boundaries so "shreyash" doesn't match "hi"
+  if (hasWord('hi', 'hello', 'hey', 'greet', 'welcome', 'howdy', 'sup')) {
     return botResponses.greetings;
   }
-  if (query.includes('good at ml') || query.includes('ml') || query.includes('machine learning') || query.includes('deep learning') || query.includes('computer vision') || query.includes('cv') || query.includes('nlp') || query.includes('ai') || query.includes('artificial intelligence') || query.includes('neural') || query.includes('tensorflow') || query.includes('opencv')) {
+  // Skills / tech stack — THIS WAS MISSING
+  if (hasWord('skill', 'skills', 'tech stack', 'stack', 'tools', 'technologies', 'languages', 'framework', 'certification', 'certifications', 'proficient', 'knows', 'know')) {
+    return botResponses.skills;
+  }
+  // ML / AI expertise — "good at X" questions
+  if (hasWord('good at', 'machine learning', 'deep learning', 'computer vision', 'nlp', 'artificial intelligence', 'neural', 'tensorflow', 'opencv', 'pyspark', 'pytorch', 'ml', 'dl', 'llm', 'rag', 'langchain')) {
     return botResponses.ml_expertise;
   }
-  if (query.includes('nvidia') || query.includes('prompt')) {
+  // NVIDIA
+  if (hasWord('nvidia', 'prompt engineer')) {
     return botResponses.nvidia;
   }
-  if (query.includes('experience') || query.includes('work') || query.includes('job') || query.includes('modern group') || query.includes('role') || query.includes('career') || query.includes('team lead')) {
+  // Experience
+  if (hasWord('experience', 'work', 'job', 'modern group', 'role', 'career', 'team lead', 'company', 'employed', 'employment')) {
     return botResponses.experience;
   }
-  if (query.includes('project') || query.includes('build') || query.includes('make') || query.includes('create') || query.includes('codebase') || query.includes('case study')) {
+  // Projects
+  if (hasWord('project', 'build', 'built', 'portfolio', 'case study', 'uav', 'drone', 'plant', 'crop', 'emotion', 'blink')) {
     return botResponses.projects_summary;
   }
-  if (query.includes('publication') || query.includes('paper') || query.includes('research') || query.includes('eyedentify') || query.includes('journal') || query.includes('conference') || query.includes('smart cities') || query.includes('springer')) {
+  // Publications
+  if (hasWord('publication', 'paper', 'research', 'eyedentify', 'journal', 'conference', 'springer', 'ajcai', 'published')) {
     return botResponses.publications;
   }
-  if (query.includes('education') || query.includes('study') || query.includes('university') || query.includes('usyd') || query.includes('college') || query.includes('degree') || query.includes('wam') || query.includes('cgpa')) {
+  // Education
+  if (hasWord('education', 'study', 'studying', 'university', 'usyd', 'sydney', 'college', 'degree', 'wam', 'cgpa', 'master', 'bachelor', 'pccoe')) {
     return botResponses.education;
   }
-  if (query.includes('contact') || query.includes('email') || query.includes('phone') || query.includes('hire') || query.includes('reach') || query.includes('fit') || query.includes('good candidate') || query.includes('qualifications')) {
+  // Contact / Hire
+  if (hasWord('contact', 'email', 'phone', 'hire', 'reach', 'linkedin', 'github', 'resume', 'qualifications', 'candidate')) {
     return botResponses.hire_fit;
   }
   
