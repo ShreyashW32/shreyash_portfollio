@@ -28,6 +28,21 @@
 </head>
 
 <body>
+	<!-- Boot Sequence Preloader -->
+	<div class="preloader" id="preloader">
+		<div class="preloader-core">
+			<div class="preloader-logo">
+				<span class="logo-dot"></span>
+				Shreyash Wetal
+			</div>
+			<div class="preloader-terminal" id="preloader-terminal"></div>
+			<div class="preloader-bar">
+				<div class="preloader-bar-fill" id="preloader-bar-fill"></div>
+			</div>
+			<div class="preloader-hint">Click anywhere or press any key to skip</div>
+		</div>
+	</div>
+
 	<!-- Interactive Particle Canvas Background -->
 	<canvas id="bg-canvas"></canvas>
 
@@ -51,6 +66,12 @@
 				<li><a href="#publications" class="nav-links">Publications</a></li>
 				<li><a href="#contact" class="nav-links">Contact</a></li>
 			</ul>
+
+			<button class="cmdk-trigger" id="cmdk-trigger" aria-label="Open command palette">
+				<i class='bx bx-search'></i>
+				<span>Quick nav</span>
+				<kbd>Ctrl K</kbd>
+			</button>
 
 			<ul class="social-nav">
 				<li>
@@ -681,6 +702,36 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Theme Switcher Dock -->
+	<div class="theme-dock" id="theme-dock" role="group" aria-label="Color theme">
+		<i class='bx bx-palette theme-dock-icon'></i>
+		<button class="theme-swatch" data-theme="cyan" style="--sw: 0,242,254" aria-label="Cyan theme" title="Cyan"></button>
+		<button class="theme-swatch" data-theme="synthwave" style="--sw: 236,72,153" aria-label="Synthwave theme" title="Synthwave"></button>
+		<button class="theme-swatch" data-theme="matrix" style="--sw: 0,230,150" aria-label="Matrix theme" title="Matrix"></button>
+		<button class="theme-swatch" data-theme="solar" style="--sw: 255,176,32" aria-label="Solar theme" title="Solar"></button>
+	</div>
+
+	<!-- Command Palette (⌘K / Ctrl+K) -->
+	<div class="cmdk-overlay" id="cmdk-overlay" aria-hidden="true">
+		<div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="Command palette">
+			<div class="cmdk-search">
+				<i class='bx bx-search'></i>
+				<input type="text" id="cmdk-input" placeholder="Jump to a section or run a command…" autocomplete="off" spellcheck="false" />
+				<span class="cmdk-esc">ESC</span>
+			</div>
+			<ul class="cmdk-list" id="cmdk-list"></ul>
+			<div class="cmdk-footer">
+				<span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+				<span><kbd>↵</kbd> select</span>
+				<span class="cmdk-brand">Shreyash·AI</span>
+			</div>
+		</div>
+	</div>
+
+	<!-- Custom Cursor -->
+	<div class="cursor-ring" id="cursor-ring"></div>
+	<div class="cursor-dot" id="cursor-dot"></div>
 
 	<script src="script.js"></script>
 </body>

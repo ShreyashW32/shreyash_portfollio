@@ -1,245 +1,260 @@
 // ========================================
-// Neural Network Canvas Background
+// 3D Neural Core — rotating projected neuron globe
+// (pure-canvas WebGL-free 3D; reacts to mouse, theme-aware)
 // ========================================
 (function () {
   const canvas = document.getElementById('bg-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
-  let width, height;
-  let neurons = [];
-  let signals = [];
-  let mouse = { x: -1000, y: -1000 };
-  let time = 0;
+  // --- themeable accent (updated live by the theme switcher) ---
+  let accent = [0, 242, 254];
+  const readAccent = () => {
+    const raw = getComputedStyle(document.documentElement)
+      .getPropertyValue('--accent-rgb').trim();
+    const parts = raw.split(',').map((n) => parseInt(n, 10));
+    if (parts.length === 3 && parts.every((n) => !isNaN(n))) accent = parts;
+  };
+  readAccent();
+  window.addEventListener('accentchange', (e) => {
+    if (e.detail && e.detail.rgb) accent = e.detail.rgb;
+    else readAccent();
+  });
+  const rgba = (a) => `rgba(${accent[0]}, ${accent[1]}, ${accent[2]}, ${a})`;
 
-  const NEURON_COUNT_DESKTOP = 70;
-  const NEURON_COUNT_MOBILE = 30;
-  const SYNAPSE_DISTANCE = 180;
-  const MOUSE_RADIUS = 220;
-  const SIGNAL_SPEED = 2.5;
-  const SIGNAL_SPAWN_RATE = 0.012; // chance per frame per synapse
+  let width, height, dpr;
+  let nodes = [];       // {x,y,z} world coords on/near a unit sphere
+  let edges = [];       // [i, j]
+  let stars = [];       // ambient depth field
+  let signals = [];     // pulses travelling along edges
+  const mouse = { x: -9999, y: -9999, nx: 0, ny: 0, active: false };
+
+  // rotation state
+  let spin = 0;
+  let rotY = 0, rotX = 0, tRotY = 0, tRotX = 0;
+
+  const isMobile = () => width < 768;
 
   function resize() {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  class Neuron {
-    constructor() {
-      this.x = Math.random() * width;
-      this.y = Math.random() * height;
-      this.vx = (Math.random() - 0.5) * 0.25;
-      this.vy = (Math.random() - 0.5) * 0.25;
-      this.baseRadius = Math.random() * 2 + 1.2;
-      this.radius = this.baseRadius;
-      this.pulseOffset = Math.random() * Math.PI * 2;
-      this.pulseSpeed = 0.02 + Math.random() * 0.015;
-      // Neuron types: soma (large, bright) vs interneuron (small, dimmer)
-      this.isSoma = Math.random() < 0.2;
-      if (this.isSoma) {
-        this.baseRadius = Math.random() * 2 + 2.5;
-        this.radius = this.baseRadius;
-      }
-      const hue = 180 + Math.random() * 50;
-      this.hue = hue;
-      this.firing = 0; // 0–1 firing intensity
+  // Even point distribution on a sphere (fibonacci) + a few interior nodes
+  function buildCore() {
+    const surface = isMobile() ? 42 : 78;
+    const interior = isMobile() ? 6 : 14;
+    nodes = [];
+
+    const golden = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < surface; i++) {
+      const y = 1 - (i / (surface - 1)) * 2; // 1..-1
+      const r = Math.sqrt(1 - y * y);
+      const theta = golden * i;
+      nodes.push({
+        x: Math.cos(theta) * r,
+        y: y,
+        z: Math.sin(theta) * r,
+        firing: 0
+      });
+    }
+    for (let i = 0; i < interior; i++) {
+      const rr = 0.3 + Math.random() * 0.5;
+      const u = Math.random() * 2 - 1;
+      const phi = Math.random() * Math.PI * 2;
+      const s = Math.sqrt(1 - u * u);
+      nodes.push({ x: Math.cos(phi) * s * rr, y: u * rr, z: Math.sin(phi) * s * rr, firing: 0 });
     }
 
-    update() {
-      this.x += this.vx;
-      this.y += this.vy;
-
-      if (this.x < 0 || this.x > width) this.vx *= -1;
-      if (this.y < 0 || this.y > height) this.vy *= -1;
-      this.x = Math.max(0, Math.min(width, this.x));
-      this.y = Math.max(0, Math.min(height, this.y));
-
-      // Pulse radius
-      const pulse = Math.sin(time * this.pulseSpeed + this.pulseOffset);
-      this.radius = this.baseRadius + pulse * 0.6;
-
-      // Decay firing
-      this.firing *= 0.94;
-
-      // Mouse proximity triggers firing
-      const mdx = this.x - mouse.x;
-      const mdy = this.y - mouse.y;
-      const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-      if (mDist < MOUSE_RADIUS * 0.6) {
-        this.firing = Math.min(this.firing + 0.08, 1);
+    // connect each node to its k nearest neighbours → stable neural mesh
+    edges = [];
+    const seen = new Set();
+    const k = 3;
+    for (let i = 0; i < nodes.length; i++) {
+      const dists = [];
+      for (let j = 0; j < nodes.length; j++) {
+        if (i === j) continue;
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const dz = nodes[i].z - nodes[j].z;
+        dists.push([dx * dx + dy * dy + dz * dz, j]);
       }
-    }
-
-    draw() {
-      const glowIntensity = 0.3 + this.firing * 0.7;
-      const alpha = this.isSoma ? 0.7 + this.firing * 0.3 : 0.45 + this.firing * 0.35;
-
-      // Outer glow
-      if (this.isSoma || this.firing > 0.1) {
-        const glowRadius = this.radius * (2.5 + this.firing * 3);
-        const gradient = ctx.createRadialGradient(
-          this.x, this.y, 0,
-          this.x, this.y, glowRadius
-        );
-        gradient.addColorStop(0, `hsla(${this.hue}, 85%, 65%, ${glowIntensity * 0.2})`);
-        gradient.addColorStop(1, `hsla(${this.hue}, 85%, 65%, 0)`);
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, glowRadius, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
+      dists.sort((a, b) => a[0] - b[0]);
+      for (let n = 0; n < k; n++) {
+        const j = dists[n][1];
+        const key = i < j ? i + '-' + j : j + '-' + i;
+        if (!seen.has(key)) { seen.add(key); edges.push([i, j]); }
       }
-
-      // Core
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${this.hue}, 80%, 70%, ${alpha})`;
-      ctx.fill();
     }
   }
 
-  class Signal {
-    constructor(fromNeuron, toNeuron) {
-      this.from = fromNeuron;
-      this.to = toNeuron;
-      this.progress = 0; // 0 to 1
-      this.speed = SIGNAL_SPEED / Math.sqrt(
-        (toNeuron.x - fromNeuron.x) ** 2 + (toNeuron.y - fromNeuron.y) ** 2
-      );
-      this.alive = true;
-      this.hue = (fromNeuron.hue + toNeuron.hue) / 2;
-    }
-
-    update() {
-      this.progress += this.speed;
-      if (this.progress >= 1) {
-        this.alive = false;
-        this.to.firing = Math.min(this.to.firing + 0.35, 1);
-      }
-    }
-
-    draw() {
-      const x = this.from.x + (this.to.x - this.from.x) * this.progress;
-      const y = this.from.y + (this.to.y - this.from.y) * this.progress;
-      const alpha = 0.6 + Math.sin(this.progress * Math.PI) * 0.4;
-      const r = 1.8 + Math.sin(this.progress * Math.PI) * 1.2;
-
-      // Glow
-      const gradient = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
-      gradient.addColorStop(0, `hsla(${this.hue}, 90%, 75%, ${alpha * 0.4})`);
-      gradient.addColorStop(1, `hsla(${this.hue}, 90%, 75%, 0)`);
-      ctx.beginPath();
-      ctx.arc(x, y, r * 4, 0, Math.PI * 2);
-      ctx.fillStyle = gradient;
-      ctx.fill();
-
-      // Core dot
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${this.hue}, 90%, 80%, ${alpha})`;
-      ctx.fill();
-    }
-  }
-
-  function init() {
-    resize();
-    neurons = [];
-    signals = [];
-    const count = width < 768 ? NEURON_COUNT_MOBILE : NEURON_COUNT_DESKTOP;
+  function buildStars() {
+    const count = isMobile() ? 60 : 130;
+    stars = [];
     for (let i = 0; i < count; i++) {
-      neurons.push(new Neuron());
+      stars.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        z: Math.random(),            // depth 0..1 for parallax
+        r: Math.random() * 1.1 + 0.3,
+        tw: Math.random() * Math.PI * 2 // twinkle phase
+      });
     }
   }
 
-  function drawSynapses() {
-    for (let i = 0; i < neurons.length; i++) {
-      for (let j = i + 1; j < neurons.length; j++) {
-        const dx = neurons[i].x - neurons[j].x;
-        const dy = neurons[i].y - neurons[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+  // core placement + size
+  function coreGeom() {
+    const cx = isMobile() ? width * 0.5 : width * 0.66;
+    const cy = isMobile() ? height * 0.4 : height * 0.5;
+    const screenR = Math.min(width, height) * (isMobile() ? 0.34 : 0.40);
+    return { cx, cy, screenR, cam: 2.6 };
+  }
 
-        if (dist < SYNAPSE_DISTANCE) {
-          const proximity = 1 - dist / SYNAPSE_DISTANCE;
-          const firingBoost = (neurons[i].firing + neurons[j].firing) * 0.3;
-          const opacity = proximity * (0.08 + firingBoost);
-
-          ctx.beginPath();
-          ctx.moveTo(neurons[i].x, neurons[i].y);
-          ctx.lineTo(neurons[j].x, neurons[j].y);
-          ctx.strokeStyle = `rgba(0, 242, 254, ${Math.min(opacity, 0.35)})`;
-          ctx.lineWidth = 0.4 + proximity * 0.6;
-          ctx.stroke();
-
-          // Spawn signals along active synapses
-          if ((neurons[i].firing > 0.2 || neurons[j].firing > 0.2) && Math.random() < SIGNAL_SPAWN_RATE) {
-            const from = neurons[i].firing > neurons[j].firing ? neurons[i] : neurons[j];
-            const to = from === neurons[i] ? neurons[j] : neurons[i];
-            signals.push(new Signal(from, to));
-          }
-        }
-      }
-
-      // Mouse dendrite connections
-      const mdx = neurons[i].x - mouse.x;
-      const mdy = neurons[i].y - mouse.y;
-      const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-
-      if (mDist < MOUSE_RADIUS) {
-        const opacity = (1 - mDist / MOUSE_RADIUS) * 0.2;
-        ctx.beginPath();
-        ctx.moveTo(neurons[i].x, neurons[i].y);
-        ctx.lineTo(mouse.x, mouse.y);
-        ctx.strokeStyle = `rgba(99, 102, 241, ${opacity})`;
-        ctx.lineWidth = 0.5;
-        ctx.stroke();
-      }
-    }
+  function project(p, g) {
+    // rotate around Y then X
+    const ay = spin + rotY;
+    const cY = Math.cos(ay), sY = Math.sin(ay);
+    const x1 = p.x * cY - p.z * sY;
+    const z1 = p.x * sY + p.z * cY;
+    const cX = Math.cos(rotX), sX = Math.sin(rotX);
+    const y2 = p.y * cX - z1 * sX;
+    const z2 = p.y * sX + z1 * cX;
+    const scale = g.cam / (g.cam - z2);
+    return {
+      sx: g.cx + x1 * scale * g.screenR,
+      sy: g.cy + y2 * scale * g.screenR,
+      depth: (z2 + 1) / 2,   // 0 back .. 1 front
+      scale
+    };
   }
 
   function animate() {
     ctx.clearRect(0, 0, width, height);
-    time++;
+    spin += 0.0016;
+    rotY += (tRotY - rotY) * 0.045;
+    rotX += (tRotX - rotX) * 0.045;
 
-    neurons.forEach(n => {
-      n.update();
-      n.draw();
-    });
+    // --- ambient star depth field (subtle parallax) ---
+    for (const s of stars) {
+      const px = s.x + mouse.nx * (12 + s.z * 26);
+      const py = s.y + mouse.ny * (12 + s.z * 26);
+      const tw = 0.35 + (Math.sin(spin * 40 + s.tw) * 0.5 + 0.5) * 0.5;
+      ctx.beginPath();
+      ctx.arc(px, py, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = rgba((0.05 + s.z * 0.18) * tw);
+      ctx.fill();
+    }
 
-    drawSynapses();
+    const g = coreGeom();
+    const P = nodes.map((p) => project(p, g));
 
-    // Update & draw signals
-    signals.forEach(s => {
-      s.update();
-      s.draw();
-    });
-    signals = signals.filter(s => s.alive);
+    // --- edges (behind nodes) ---
+    for (const [i, j] of edges) {
+      const a = P[i], b = P[j];
+      const depth = (a.depth + b.depth) / 2;
+      const fire = (nodes[i].firing + nodes[j].firing) * 0.35;
+      ctx.beginPath();
+      ctx.moveTo(a.sx, a.sy);
+      ctx.lineTo(b.sx, b.sy);
+      ctx.strokeStyle = rgba(Math.min(0.04 + depth * 0.12 + fire, 0.4));
+      ctx.lineWidth = 0.4 + depth * 0.7;
+      ctx.stroke();
 
-    // Spontaneous random firing to keep the network alive
-    if (Math.random() < 0.008) {
-      const rn = neurons[Math.floor(Math.random() * neurons.length)];
-      rn.firing = Math.min(rn.firing + 0.5, 1);
+      if ((nodes[i].firing > 0.25 || nodes[j].firing > 0.25) && Math.random() < 0.02) {
+        const from = nodes[i].firing > nodes[j].firing ? i : j;
+        signals.push({ a: from, b: from === i ? j : i, t: 0 });
+      }
+    }
+
+    // --- signal pulses ---
+    for (const sig of signals) {
+      sig.t += 0.03;
+      const a = P[sig.a], b = P[sig.b];
+      const x = a.sx + (b.sx - a.sx) * sig.t;
+      const y = a.sy + (b.sy - a.sy) * sig.t;
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, 7);
+      glow.addColorStop(0, rgba(0.5));
+      glow.addColorStop(1, rgba(0));
+      ctx.beginPath();
+      ctx.arc(x, y, 7, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
+      if (sig.t >= 1) nodes[sig.b].firing = Math.min(nodes[sig.b].firing + 0.5, 1);
+    }
+    signals = signals.filter((s) => s.t < 1);
+
+    // --- nodes (painter's algorithm: far → near) ---
+    const order = P.map((p, i) => i).sort((a, b) => P[a].depth - P[b].depth);
+    for (const i of order) {
+      const p = P[i];
+      const n = nodes[i];
+      n.firing *= 0.94;
+
+      // mouse proximity fires nearby nodes
+      if (mouse.active) {
+        const dx = p.sx - mouse.x, dy = p.sy - mouse.y;
+        if (dx * dx + dy * dy < 130 * 130) n.firing = Math.min(n.firing + 0.06, 1);
+      }
+
+      const size = (0.8 + p.depth * 2.0) * p.scale + n.firing * 2.2;
+      const alpha = 0.25 + p.depth * 0.5 + n.firing * 0.3;
+
+      if (p.depth > 0.45 || n.firing > 0.15) {
+        const gr = size * (2.6 + n.firing * 3);
+        const glow = ctx.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, gr);
+        glow.addColorStop(0, rgba((0.12 + n.firing * 0.35) * p.depth));
+        glow.addColorStop(1, rgba(0));
+        ctx.beginPath();
+        ctx.arc(p.sx, p.sy, gr, 0, Math.PI * 2);
+        ctx.fillStyle = glow;
+        ctx.fill();
+      }
+
+      ctx.beginPath();
+      ctx.arc(p.sx, p.sy, size, 0, Math.PI * 2);
+      ctx.fillStyle = rgba(Math.min(alpha, 0.95));
+      ctx.fill();
+    }
+
+    // keep the network alive with spontaneous firing
+    if (Math.random() < 0.03) {
+      nodes[Math.floor(Math.random() * nodes.length)].firing = 1;
     }
 
     requestAnimationFrame(animate);
   }
 
-  // Event listeners
+  // --- interaction ---
   window.addEventListener('mousemove', (e) => {
     mouse.x = e.clientX;
     mouse.y = e.clientY;
+    mouse.nx = e.clientX / width - 0.5;
+    mouse.ny = e.clientY / height - 0.5;
+    mouse.active = true;
+    tRotY = mouse.nx * 0.7;
+    tRotX = mouse.ny * 0.55;
   });
-
   window.addEventListener('mouseleave', () => {
-    mouse.x = -1000;
-    mouse.y = -1000;
+    mouse.active = false;
+    mouse.x = -9999; mouse.y = -9999;
+    tRotY = 0; tRotX = 0;
   });
 
   let resizeTimeout;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(init, 200);
+    resizeTimeout = setTimeout(() => { resize(); buildCore(); buildStars(); }, 200);
   });
 
-  init();
+  resize();
+  buildCore();
+  buildStars();
   animate();
 })();
 
@@ -678,15 +693,15 @@ if (chatbotSuggestions) {
     chip.addEventListener('click', () => {
       const questionKey = chip.getAttribute('data-question');
       const questionText = chip.textContent;
-      
+
       appendMessage(questionText, true);
-      
+
       // Remove suggestions panel entirely when clicked
       const suggestionsContainer = document.getElementById('chatbot-suggestions');
       if (suggestionsContainer) {
         suggestionsContainer.remove();
       }
-      
+
       setTimeout(() => {
         const replyText = botResponses[questionKey] || botResponses.default;
         appendMessage(replyText, false);
@@ -694,3 +709,454 @@ if (chatbotSuggestions) {
     });
   });
 }
+
+// ========================================================================
+// CREATIVE UPGRADE LAYER
+// Boot preloader · ⌘K command palette · text scramble · count-up ·
+// custom cursor + magnetic · 3D tilt + spotlight cards
+// ========================================================================
+
+const REDUCED_MOTION =
+  window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FINE_POINTER =
+  window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+// ------------------------------------------------------------------------
+// 1. Boot Sequence Preloader
+// ------------------------------------------------------------------------
+(function () {
+  const preloader = document.getElementById('preloader');
+  if (!preloader) return;
+
+  const terminal = document.getElementById('preloader-terminal');
+  const barFill = document.getElementById('preloader-bar-fill');
+  let dismissed = false;
+
+  const dismiss = () => {
+    if (dismissed) return;
+    dismissed = true;
+    preloader.classList.add('done');
+    document.body.style.overflow = '';
+    // Kick off the hero name decrypt once the curtain lifts
+    window.dispatchEvent(new Event('portfolio:ready'));
+    setTimeout(() => preloader.remove(), 800);
+  };
+
+  // Reduced motion or no terminal → skip the show
+  if (REDUCED_MOTION || !terminal || !barFill) {
+    dismiss();
+    return;
+  }
+
+  document.body.style.overflow = 'hidden';
+
+  const lines = [
+    { t: 'booting neural interface', ok: 'OK' },
+    { t: 'loading models · llm · rag · vision', ok: 'OK' },
+    { t: 'mounting resume.db', ok: 'OK' },
+    { t: 'calibrating synapses', ok: 'READY' }
+  ];
+
+  let li = 0;
+  const renderLine = () => {
+    if (dismissed) return;
+    if (li >= lines.length) {
+      barFill.style.width = '100%';
+      setTimeout(dismiss, 420);
+      return;
+    }
+    const line = document.createElement('div');
+    line.className = 'preloader-line';
+    line.innerHTML =
+      `<span class="pl-dim">$</span> ${lines[li].t} ` +
+      `<span class="pl-ok">[${lines[li].ok}]</span>`;
+    terminal.appendChild(line);
+    li++;
+    barFill.style.width = Math.round((li / lines.length) * 100) + '%';
+    setTimeout(renderLine, 360);
+  };
+  renderLine();
+
+  // Skip on any interaction
+  const skip = () => dismiss();
+  window.addEventListener('keydown', skip, { once: true });
+  preloader.addEventListener('click', skip, { once: true });
+})();
+
+// ------------------------------------------------------------------------
+// 2. Text Scramble — decrypt the hero name on ready
+// ------------------------------------------------------------------------
+(function () {
+  const el = document.querySelector('.hero-title');
+  if (!el) return;
+
+  const finalText = el.textContent;
+
+  if (REDUCED_MOTION) return; // leave the name as-is
+
+  const chars = '!<>-_\\/[]{}—=+*^?#01';
+  let frame;
+
+  const run = () => {
+    const total = finalText.length;
+    let frameCount = 0;
+    const queue = [];
+    for (let i = 0; i < total; i++) {
+      const start = Math.floor(Math.random() * 20);
+      const end = start + Math.floor(Math.random() * 30) + 15;
+      queue.push({ char: finalText[i], start, end, rand: '' });
+    }
+
+    const update = () => {
+      let output = '';
+      let complete = 0;
+      for (let i = 0; i < queue.length; i++) {
+        const q = queue[i];
+        if (frameCount >= q.end) {
+          complete++;
+          output += q.char;
+        } else if (q.char === ' ') {
+          output += ' ';
+        } else {
+          // Keep every slot filled with a flickering glyph (no layout shift)
+          if (!q.rand || Math.random() < 0.28) {
+            q.rand = chars[Math.floor(Math.random() * chars.length)];
+          }
+          output += `<span class="scramble-char">${q.rand}</span>`;
+        }
+      }
+      el.innerHTML = output;
+      if (complete === queue.length) {
+        el.textContent = finalText;
+        cancelAnimationFrame(frame);
+        return;
+      }
+      frameCount++;
+      frame = requestAnimationFrame(update);
+    };
+    update();
+  };
+
+  window.addEventListener('portfolio:ready', () => setTimeout(run, 180), { once: true });
+})();
+
+// ------------------------------------------------------------------------
+// 3. Animated Count-Up for stats & impact metrics
+// ------------------------------------------------------------------------
+(function () {
+  const targets = document.querySelectorAll('.stat-val, .impact-metric');
+  if (!targets.length) return;
+
+  const animateValue = (node) => {
+    const raw = node.textContent.trim();
+    const match = raw.match(/^(\D*)([\d.]+)(.*)$/);
+    if (!match) return;
+    const [, prefix, numStr, suffix] = match;
+    const target = parseFloat(numStr);
+    const decimals = (numStr.split('.')[1] || '').length;
+
+    if (REDUCED_MOTION) {
+      node.textContent = raw;
+      return;
+    }
+
+    const duration = 1500;
+    const startTime = performance.now();
+    const step = (now) => {
+      const p = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      const val = (target * eased).toFixed(decimals);
+      node.textContent = prefix + val + suffix;
+      if (p < 1) requestAnimationFrame(step);
+      else node.textContent = raw;
+    };
+    requestAnimationFrame(step);
+  };
+
+  const io = new IntersectionObserver((entries, obs) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        animateValue(entry.target);
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  targets.forEach((t) => io.observe(t));
+})();
+
+// ------------------------------------------------------------------------
+// 4. Command Palette (⌘K / Ctrl+K)
+// ------------------------------------------------------------------------
+(function () {
+  const overlay = document.getElementById('cmdk-overlay');
+  const input = document.getElementById('cmdk-input');
+  const list = document.getElementById('cmdk-list');
+  const trigger = document.getElementById('cmdk-trigger');
+  if (!overlay || !input || !list) return;
+
+  const go = (id) => () => {
+    const target = document.getElementById(id);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  const openLink = (url) => () => window.open(url, '_blank', 'noopener');
+
+  const commands = [
+    { group: 'Navigate', icon: 'bx-user', label: 'About', hint: 'overview', run: go('about') },
+    { group: 'Navigate', icon: 'bx-briefcase', label: 'Experience', hint: 'career', run: go('experience') },
+    { group: 'Navigate', icon: 'bx-line-chart', label: 'Engineering Impact', hint: 'metrics', run: go('impact') },
+    { group: 'Navigate', icon: 'bx-chip', label: 'Skills', hint: 'stack', run: go('skills') },
+    { group: 'Navigate', icon: 'bx-folder', label: 'Projects', hint: 'case studies', run: go('projects') },
+    { group: 'Navigate', icon: 'bx-book-open', label: 'Publications & Awards', hint: 'research', run: go('publications') },
+    { group: 'Navigate', icon: 'bx-envelope', label: 'Contact', hint: 'connect', run: go('contact') },
+    { group: 'Actions', icon: 'bx-copy', label: 'Copy email address', hint: 'clipboard', run: () => {
+        navigator.clipboard && navigator.clipboard.writeText('shreyash.wetal03@gmail.com');
+        const box = document.getElementById('email-box');
+        if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } },
+    { group: 'Actions', icon: 'bx-bot', label: 'Ask the AI assistant', hint: 'chatbot', run: () => {
+        const c = document.getElementById('chatbot-container');
+        const inp = document.getElementById('chatbot-input');
+        if (c) { c.classList.add('open'); if (inp) inp.focus(); }
+      } },
+    { group: 'Actions', icon: 'bx-palette', label: 'Cycle color theme', hint: 'appearance', run: () => {
+        if (window.__cycleTheme) window.__cycleTheme();
+      } },
+    { group: 'Links', icon: 'bxl-github', label: 'GitHub', hint: 'ShreyashW32', run: openLink('https://github.com/ShreyashW32') },
+    { group: 'Links', icon: 'bxl-linkedin', label: 'LinkedIn', hint: 'profile', run: openLink('https://www.linkedin.com/in/shreyash-w-388bb4223/') },
+    { group: 'Links', icon: 'bx-file', label: 'EyeDentify paper (AJCAI 2025)', hint: 'springer', run: openLink('https://link.springer.com/chapter/10.1007/978-981-95-4972-6_16') }
+  ];
+
+  let filtered = commands.slice();
+  let activeIndex = 0;
+
+  const render = () => {
+    list.innerHTML = '';
+    if (!filtered.length) {
+      list.innerHTML = '<div class="cmdk-empty">No matching commands.</div>';
+      return;
+    }
+    let lastGroup = null;
+    let flatIndex = 0;
+    filtered.forEach((cmd) => {
+      if (cmd.group !== lastGroup) {
+        const gl = document.createElement('li');
+        gl.className = 'cmdk-group-label';
+        gl.textContent = cmd.group;
+        list.appendChild(gl);
+        lastGroup = cmd.group;
+      }
+      const li = document.createElement('li');
+      li.className = 'cmdk-item' + (flatIndex === activeIndex ? ' active' : '');
+      li.dataset.index = flatIndex;
+      li.innerHTML =
+        `<i class='bx ${cmd.icon}'></i>` +
+        `<span class="cmdk-item-label">${cmd.label}</span>` +
+        `<span class="cmdk-item-hint">${cmd.hint}</span>`;
+      li.addEventListener('click', () => execute(cmd));
+      li.addEventListener('mousemove', () => {
+        activeIndex = parseInt(li.dataset.index, 10);
+        highlight();
+      });
+      list.appendChild(li);
+      flatIndex++;
+    });
+  };
+
+  const highlight = () => {
+    list.querySelectorAll('.cmdk-item').forEach((el) => {
+      const isActive = parseInt(el.dataset.index, 10) === activeIndex;
+      el.classList.toggle('active', isActive);
+      if (isActive) el.scrollIntoView({ block: 'nearest' });
+    });
+  };
+
+  const filter = (q) => {
+    const query = q.toLowerCase().trim();
+    filtered = !query
+      ? commands.slice()
+      : commands.filter((c) =>
+          (c.label + ' ' + c.hint + ' ' + c.group).toLowerCase().includes(query)
+        );
+    activeIndex = 0;
+    render();
+  };
+
+  const open = () => {
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    input.value = '';
+    filter('');
+    setTimeout(() => input.focus(), 40);
+  };
+  const close = () => {
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+  };
+  const execute = (cmd) => {
+    close();
+    setTimeout(() => cmd.run(), 120);
+  };
+
+  if (trigger) trigger.addEventListener('click', open);
+
+  input.addEventListener('input', (e) => filter(e.target.value));
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const isOpen = overlay.classList.contains('open');
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      isOpen ? close() : open();
+      return;
+    }
+    if (!isOpen) return;
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
+    else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIndex = Math.min(activeIndex + 1, filtered.length - 1);
+      highlight();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIndex = Math.max(activeIndex - 1, 0);
+      highlight();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filtered[activeIndex]) execute(filtered[activeIndex]);
+    }
+  });
+})();
+
+// ------------------------------------------------------------------------
+// 5. Custom Cursor + Magnetic Elements  (desktop, fine-pointer only)
+// ------------------------------------------------------------------------
+(function () {
+  if (!FINE_POINTER || REDUCED_MOTION) return;
+
+  const dot = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  if (!dot || !ring) return;
+
+  document.body.classList.add('custom-cursor-active');
+
+  let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+  let rx = mx, ry = my;
+
+  window.addEventListener('mousemove', (e) => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%, -50%)`;
+  });
+
+  const loop = () => {
+    rx += (mx - rx) * 0.18;
+    ry += (my - ry) * 0.18;
+    ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
+    requestAnimationFrame(loop);
+  };
+  loop();
+
+  const hoverTargets = 'a, button, .console-chip, .skill-chip, .email-box, .project-card, [data-magnetic]';
+  document.querySelectorAll(hoverTargets).forEach((el) => {
+    el.addEventListener('mouseenter', () => ring.classList.add('hovering'));
+    el.addEventListener('mouseleave', () => ring.classList.remove('hovering'));
+  });
+
+  window.addEventListener('mousedown', () => ring.classList.add('clicking'));
+  window.addEventListener('mouseup', () => ring.classList.remove('clicking'));
+  window.addEventListener('mouseleave', () => { dot.style.opacity = '0'; ring.style.opacity = '0'; });
+  window.addEventListener('mouseenter', () => { dot.style.opacity = '1'; ring.style.opacity = '1'; });
+
+  // Magnetic pull on prominent interactive elements
+  const magnets = document.querySelectorAll(
+    '.btn, .social-nav a, .cmdk-trigger, .chatbot-toggle-btn, .scroll-top'
+  );
+  magnets.forEach((el) => {
+    el.addEventListener('mousemove', (e) => {
+      const r = el.getBoundingClientRect();
+      const relX = e.clientX - (r.left + r.width / 2);
+      const relY = e.clientY - (r.top + r.height / 2);
+      el.style.transform = `translate(${relX * 0.25}px, ${relY * 0.35}px)`;
+    });
+    el.addEventListener('mouseleave', () => { el.style.transform = ''; });
+  });
+})();
+
+// ------------------------------------------------------------------------
+// 6. 3D Tilt + Spotlight on cards
+// ------------------------------------------------------------------------
+(function () {
+  if (!FINE_POINTER || REDUCED_MOTION) return;
+
+  const cards = document.querySelectorAll(
+    '.project-card, .impact-card, .stat-box, .skill-category'
+  );
+
+  cards.forEach((card) => {
+    card.addEventListener('mouseenter', () => card.classList.add('is-tilting'));
+
+    card.addEventListener('mousemove', (e) => {
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;   // 0..1
+      const py = (e.clientY - r.top) / r.height;   // 0..1
+      const rotY = (px - 0.5) * 9;   // deg
+      const rotX = (0.5 - py) * 9;   // deg
+      card.style.transform =
+        `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-6px)`;
+      card.style.setProperty('--mx', px * 100 + '%');
+      card.style.setProperty('--my', py * 100 + '%');
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.classList.remove('is-tilting');
+      card.style.transform = '';
+      card.style.removeProperty('--mx');
+      card.style.removeProperty('--my');
+    });
+  });
+})();
+
+// ------------------------------------------------------------------------
+// 7. Theme Switcher — recolors the whole UI + 3D core, persisted
+// ------------------------------------------------------------------------
+(function () {
+  const swatches = document.querySelectorAll('.theme-swatch');
+  if (!swatches.length) return;
+
+  const THEMES = {
+    cyan:      { rgb: [0, 242, 254],  rgb2: [79, 172, 254] },
+    synthwave: { rgb: [236, 72, 153], rgb2: [139, 92, 246] },
+    matrix:    { rgb: [0, 230, 150],  rgb2: [74, 222, 128] },
+    solar:     { rgb: [255, 176, 32], rgb2: [251, 146, 60] }
+  };
+
+  const root = document.documentElement;
+  const order = Object.keys(THEMES);
+
+  const apply = (name, save = true) => {
+    const t = THEMES[name];
+    if (!t) return;
+    root.style.setProperty('--accent-rgb', t.rgb.join(', '));
+    root.style.setProperty('--accent-rgb-2', t.rgb2.join(', '));
+    swatches.forEach((s) => s.classList.toggle('active', s.dataset.theme === name));
+    window.dispatchEvent(new CustomEvent('accentchange', { detail: { rgb: t.rgb } }));
+    if (save) { try { localStorage.setItem('portfolio-theme', name); } catch (e) {} }
+  };
+
+  swatches.forEach((s) => s.addEventListener('click', () => apply(s.dataset.theme)));
+
+  let current = 'cyan';
+  try { current = localStorage.getItem('portfolio-theme') || 'cyan'; } catch (e) {}
+  if (!THEMES[current]) current = 'cyan';
+  apply(current, false);
+
+  // exposed so the ⌘K palette can cycle themes
+  window.__cycleTheme = () => {
+    const active = order.find((k) =>
+      document.querySelector('.theme-swatch[data-theme="' + k + '"]').classList.contains('active')
+    ) || 'cyan';
+    apply(order[(order.indexOf(active) + 1) % order.length]);
+  };
+})();
