@@ -2164,7 +2164,7 @@ body.custom-cursor-active input {
   #bg-canvas, .main-header, .preloader, .cmdk-overlay, .cursor-dot, .cursor-ring,
   .chatbot-container, .chatbot-toggle-btn, .hud-overlay, .theme-dock,
   .console-wrapper, .hero-buttons, .lens-switch, .footer, .syd-time,
-  .live-indicator, .email-copy-icon, [data-action="print-resume"] {
+  .live-indicator, .email-copy-icon, [data-action="print-resume"], .no-print {
     display: none !important;
   }
 

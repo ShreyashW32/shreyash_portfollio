@@ -364,11 +364,12 @@ const chips = document.querySelectorAll('.console-chip');
 const queryResponses = {
   sys_status: `[SYSTEM STATUS]
 - Name: Shreyash Wetal
-- Focus: AI/ML & Computer Vision Systems
-- Current Role: AI Lead @ The Modern Group (Sydney, Australia)
-- Education: Master of CS (AI & Data Science) @ University of Sydney (WAM-76)
+- Focus: GenAI, LLM/RAG Systems & Computer Vision
+- Current Role: AI Research Student @ University of Sydney (medical imaging)
+- Previous: AI Engineer Team Lead @ The Modern Group · Prompt Engineer @ NVIDIA
+- Education: Master of CS (AI & Data Science) @ USyd (WAM: 75)
 - Bachelor: B.Tech in IT @ PCCOE (CGPA: 8.57/10)
-- Standing: Active, ready for high-scale AI infrastructure deployments.`,
+- Standing: Active, ready for high-scale AI deployments.`,
   
   skills_list: `[TECHNICAL STACK]
 - Programming: Python, C/C++, SQL, HTML/CSS
@@ -381,7 +382,7 @@ const queryResponses = {
 - Title: Associate Prompt Engineer
 - Location: Santa Clara, CA, USA (Remote)
 - Tenure: Oct 2024 - Dec 2024
-- Details: Developed and optimized AI-driven prompt engineering models for NLP. Enhanced LLM accuracy through data-driven tuning and reinforcement learning (RL) techniques. Researched prompt behavior to improve contextual understanding across diverse use cases.`,
+- Details: Engineered enterprise-grade prompt frameworks improving LLM response precision by 22%. Ran A/B tests across transformer models for accuracy, clarity, and consistency. Built automated prompt-evaluation pipelines to standardize output quality assessment and NLP benchmarking.`,
 
   project_eyedentify: `[CASE STUDY: EYEDENTIFY]
 - Project: Blink-based Biometric Identification (AJCAI 2025 Paper)
@@ -545,14 +546,14 @@ if (chatbotToggle && chatbotContainer && chatbotClose) {
 const botResponses = {
   greetings: "Hello! I can answer questions about Shreyash's skills, experience, projects, education, and contact details. What would you like to know?",
   skills: "Shreyash's tech stack includes:\n• Languages: Python, C/C++, SQL, HTML/CSS\n• AI/ML: TensorFlow, OpenCV, LangChain, Scikit-Learn, NLTK, Pandas, Gensim\n• Platforms: ROS, Gazebo, YOLOv8, Flask, Django, GCP, Firebase\n• Certifications: TensorFlow Developer (DeepLearning.AI), Deep Learning Specialization",
-  experience: "Shreyash is currently an AI Engineer & Team Lead at The Modern Group in Sydney, Australia. Formerly, they worked as an Associate Prompt Engineer at NVIDIA in Santa Clara, CA.",
+  experience: "Shreyash is currently an AI Research Student at the University of Sydney, working on deep learning for medical image analysis (Dice score +12%, U-Net/DeepLabV3+ benchmarking). Previously: AI Engineer & Team Lead at The Modern Group, Sydney (RAG retrieval accuracy +30%, deployment cycles -40%), and Associate Prompt Engineer at NVIDIA, Santa Clara (LLM response precision +22%).",
   nvidia: "At NVIDIA, Shreyash was an Associate Prompt Engineer focusing on NLP. They developed prompt engineering models, tuned LLMs, and conducted reinforcement learning research to improve model outputs.",
   publications: "Shreyash has published 3 research papers:\n1. 'EyeDentify' (AJCAI 2025) - Blink Biometric Spatio-Temporal classification.\n2. 'Smart Drone Surveillance System' (ICSC 2024) - Drone anomaly mapping.\n3. 'Intelligent Auto Traffic Signal Controller' (IJSART) - Emergency vehicle signals.",
-  education: "• Master of Computer Science (AI & Data Science) - University of Sydney (2025 - 2027) | WAM: 76\n• B.Tech in Information Technology - PCCOE, Pune (2020 - 2024) | CGPA: 8.57/10",
+  education: "• Master of Computer Science (AI & Data Science) - University of Sydney (2025 - 2027) | WAM: 75, plus AI research in medical imaging\n• B.Tech in Information Technology - PCCOE, Pune (2020 - 2024) | CGPA: 8.57/10",
   contact: "You can reach Shreyash via:\n• Email: shreyash.wetal03@gmail.com\n• Phone: +61 0451507744 (Sydney, AU)\n• LinkedIn: linkedin.com/in/shreyash-w-388bb4223/\n• GitHub: github.com/ShreyashW32",
   ml_expertise: "Yes! Shreyash is highly proficient in Machine Learning, Deep Learning, and Computer Vision. They have published research papers in these domains (like EyeDentify blink biometrics), built industrial AI models (YOLOv8 UAV tracking), optimized LLMs at NVIDIA, and currently lead AI solutions at The Modern Group using TensorFlow, PyTorch, and RAG pipelines.",
-  who_is: "Shreyash Wetal is a Sydney-based AI & Computer Vision Engineer. They are currently a Master's student at the University of Sydney and serve as an AI Engineer & Team Lead at The Modern Group, specializing in LLMs, RAG, and automated anomaly detection.",
-  projects_summary: "Shreyash has built 5 major projects:\n1. EyeDentify (99.04% accurate blink biometrics)\n2. Smart Drone Surveillance (YOLOv8 city monitoring)\n3. Medicinal Plant Identification (Ayush SIH Chatbot)\n4. Crop Disease Detection (90%+ CNN pathology detection)\n5. Multi-Modal Emotion Recognition (audio/visual/text sentiment)",
+  who_is: "Shreyash Wetal is a Sydney-based AI Engineer & researcher. They are currently a Master's student and AI Research Student at the University of Sydney (medical image analysis), previously AI Engineer & Team Lead at The Modern Group and Prompt Engineer at NVIDIA — specializing in GenAI, LLMs, RAG, and computer vision.",
+  projects_summary: "Shreyash has built 6 major projects:\n1. AI Product Innovation & Consumer Insights (GenAI ideation + idea-scoring framework)\n2. EyeDentify (99.04% accurate blink biometrics)\n3. Smart Drone Surveillance (YOLOv8 city monitoring)\n4. Medicinal Plant Identification (Ayush SIH Chatbot)\n5. Crop Disease Detection (90%+ CNN pathology detection)\n6. Multi-Modal Emotion Recognition (audio/visual/text sentiment)",
   assistant_identity: "I am Shreyash's virtual AI assistant. I'm running locally on their portfolio website to help answer questions about their background, skills, projects, education, and career achievements!",
   hire_fit: "Absolutely. Shreyash has led AI engineering teams, worked at NVIDIA, published international papers, and holds a strong academic track record in Computer Science (Master's from USyd). They are fully equipped to drive AI engineering and machine learning solutions.",
   default: "I'm not completely sure about that. Try asking about 'skills', 'experience', 'NVIDIA', 'publications', 'education', or 'contact'!"
@@ -922,7 +923,8 @@ const FINE_POINTER =
     { group: 'Actions', icon: 'bx-palette', label: 'Cycle color theme', hint: 'appearance', run: () => {
         if (window.__cycleTheme) window.__cycleTheme();
       } },
-    { group: 'Actions', icon: 'bx-printer', label: 'Print / save résumé (PDF)', hint: 'ctrl+p', run: () => window.print() },
+    { group: 'Actions', icon: 'bx-download', label: 'Download résumé (PDF)', hint: 'cv', run: () => window.open('./assets/Shreyash_Wetal_CV.pdf', '_blank', 'noopener') },
+    { group: 'Actions', icon: 'bx-printer', label: 'Print this page', hint: 'ctrl+p', run: () => window.print() },
     { group: 'Lens', icon: 'bx-code-alt', label: 'View as Engineer', hint: 'adaptive mode', run: () => window.__setLens && window.__setLens('engineer') },
     { group: 'Lens', icon: 'bx-briefcase-alt-2', label: 'View as Recruiter', hint: 'adaptive mode', run: () => window.__setLens && window.__setLens('recruiter') },
     { group: 'Lens', icon: 'bx-book', label: 'View as Researcher', hint: 'adaptive mode', run: () => window.__setLens && window.__setLens('researcher') },
@@ -1185,10 +1187,12 @@ const FINE_POINTER =
  neofetch    system card
  theme <t>   cyan | synthwave | matrix | solar
  lens <l>    engineer | recruiter | researcher
- resume      print / save PDF résumé
+ resume      open CV (PDF)
+ print       print this page as a document
  clear       wipe terminal`;
 
   const PROJECTS = `[PROJECT INDEX]
+ 00 AI Product Innovation — GenAI ideation + insights
  01 EyeDentify — blink biometrics, 99.04% (AJCAI 2025)
  02 UAV Surveillance — YOLOv8 + ROS (ICSC 2024)
  03 Medicinal Plant ID — SIH, Ayush Ministry
@@ -1293,7 +1297,11 @@ Tip: type 'resume' for a printable CV.`;
         if (window.__setLens && window.__setLens(arg)) reply(`lens set → ${arg} (hero + projects re-prioritized)`, true);
         else reply('usage: lens <engineer|recruiter|researcher>', true);
         break;
-      case 'resume': case 'cv': case 'print':
+      case 'resume': case 'cv':
+        reply('Opening Shreyash_Wetal_CV.pdf …', true);
+        setTimeout(() => window.open('./assets/Shreyash_Wetal_CV.pdf', '_blank', 'noopener'), 350);
+        break;
+      case 'print':
         reply('Opening print dialog… choose "Save as PDF".', true);
         setTimeout(() => window.print(), 350);
         break;
@@ -1336,28 +1344,30 @@ Tip: type 'resume' for a printable CV.`;
   const cards = Array.prototype.slice.call(
     document.querySelectorAll('.projects-grid .project-card')
   );
-  // card order in DOM: 0 EyeDentify · 1 UAV · 2 Plants · 3 Crop · 4 Emotion
+  // card order in DOM: 0 GenAI Innovation · 1 EyeDentify · 2 UAV · 3 Plants · 4 Crop · 5 Emotion
+
+  const CV_PDF = './assets/Shreyash_Wetal_CV.pdf';
 
   const LENSES = {
     engineer: {
       intro: 'I design and ship AI systems end-to-end — <span class="highlight">LLM & RAG pipelines</span>, real-time <span class="highlight">computer vision</span>, and the production infrastructure that keeps them fast and reliable. Master\'s @ University of Sydney.',
       primary: { label: 'View Projects', href: '#projects' },
       secondary: { label: 'GitHub', href: 'https://github.com/ShreyashW32', blank: true },
-      order: [1, 2, 3, 4, 0],
+      order: [2, 3, 4, 5, 0, 1],
       pick: '★ top pick · engineers'
     },
     recruiter: {
-      intro: 'Lead AI Engineer with <span class="highlight">NVIDIA experience</span>, 3 published papers, and a record of shipping <span class="highlight">production ML</span> — currently completing a Master\'s at the University of Sydney.',
-      primary: { label: 'Download Résumé', action: 'print-resume' },
+      intro: 'AI Engineer with <span class="highlight">NVIDIA experience</span>, 3 published papers, and a record of shipping <span class="highlight">production ML</span> — currently an AI researcher completing a Master\'s at the University of Sydney.',
+      primary: { label: 'Download Résumé', href: CV_PDF, blank: true },
       secondary: { label: 'Get In Touch', href: '#contact' },
-      order: [0, 2, 1, 3, 4],
+      order: [1, 0, 3, 2, 4, 5],
       pick: '★ top pick · recruiters'
     },
     researcher: {
-      intro: 'My research spans <span class="highlight">non-invasive biometrics</span> and aerial vision — 3 peer-reviewed publications including <span class="highlight">AJCAI 2025 (Springer)</span>, introducing novel COTI & MITI spatio-temporal templates.',
+      intro: 'My research spans <span class="highlight">medical image analysis</span>, non-invasive biometrics, and aerial vision — 3 peer-reviewed publications including <span class="highlight">AJCAI 2025 (Springer)</span>, introducing novel COTI & MITI spatio-temporal templates.',
       primary: { label: 'Read Publications', href: '#publications' },
       secondary: { label: 'EyeDentify Paper', href: 'https://link.springer.com/chapter/10.1007/978-981-95-4972-6_16', blank: true },
-      order: [0, 1, 4, 3, 2],
+      order: [1, 2, 5, 4, 3, 0],
       pick: '★ top pick · researchers'
     }
   };
