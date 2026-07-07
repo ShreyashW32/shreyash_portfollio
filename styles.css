@@ -1319,6 +1319,23 @@ section {
   background: rgba(var(--accent-rgb), 0.05);
 }
 
+/* follow-up quick replies rendered under bot answers */
+.followup-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-self: flex-start;
+  max-width: 92%;
+}
+
+/* links inside bot messages */
+.bot-message a {
+  color: var(--accent-cyan);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}
+
 .chatbot-footer {
   padding: 0.85rem 1.25rem;
   background: rgba(255, 255, 255, 0.02);

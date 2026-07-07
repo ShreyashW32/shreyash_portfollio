@@ -542,172 +542,382 @@ if (chatbotToggle && chatbotContainer && chatbotClose) {
   });
 }
 
-// Chat responses mapping
-const botResponses = {
-  greetings: "Hello! I can answer questions about Shreyash's skills, experience, projects, education, and contact details. What would you like to know?",
-  skills: "Shreyash's tech stack includes:\n• Languages: Python, C/C++, SQL, HTML/CSS\n• AI/ML: TensorFlow, OpenCV, LangChain, Scikit-Learn, NLTK, Pandas, Gensim\n• Platforms: ROS, Gazebo, YOLOv8, Flask, Django, GCP, Firebase\n• Certifications: TensorFlow Developer (DeepLearning.AI), Deep Learning Specialization",
-  experience: "Shreyash is currently an AI Research Student at the University of Sydney, working on deep learning for medical image analysis (Dice score +12%, U-Net/DeepLabV3+ benchmarking). Previously: AI Engineer & Team Lead at The Modern Group, Sydney (RAG retrieval accuracy +30%, deployment cycles -40%), and Associate Prompt Engineer at NVIDIA, Santa Clara (LLM response precision +22%).",
-  nvidia: "At NVIDIA, Shreyash was an Associate Prompt Engineer focusing on NLP. They developed prompt engineering models, tuned LLMs, and conducted reinforcement learning research to improve model outputs.",
-  publications: "Shreyash has published 3 research papers:\n1. 'EyeDentify' (AJCAI 2025) - Blink Biometric Spatio-Temporal classification.\n2. 'Smart Drone Surveillance System' (ICSC 2024) - Drone anomaly mapping.\n3. 'Intelligent Auto Traffic Signal Controller' (IJSART) - Emergency vehicle signals.",
-  education: "• Master of Computer Science (AI & Data Science) - University of Sydney (2025 - 2027) | WAM: 75, plus AI research in medical imaging\n• B.Tech in Information Technology - PCCOE, Pune (2020 - 2024) | CGPA: 8.57/10",
-  contact: "You can reach Shreyash via:\n• Email: shreyash.wetal03@gmail.com\n• Phone: +61 0451507744 (Sydney, AU)\n• LinkedIn: linkedin.com/in/shreyash-w-388bb4223/\n• GitHub: github.com/ShreyashW32",
-  ml_expertise: "Yes! Shreyash is highly proficient in Machine Learning, Deep Learning, and Computer Vision. They have published research papers in these domains (like EyeDentify blink biometrics), built industrial AI models (YOLOv8 UAV tracking), optimized LLMs at NVIDIA, and currently lead AI solutions at The Modern Group using TensorFlow, PyTorch, and RAG pipelines.",
-  who_is: "Shreyash Wetal is a Sydney-based AI Engineer & researcher. They are currently a Master's student and AI Research Student at the University of Sydney (medical image analysis), previously AI Engineer & Team Lead at The Modern Group and Prompt Engineer at NVIDIA — specializing in GenAI, LLMs, RAG, and computer vision.",
-  projects_summary: "Shreyash has built 6 major projects:\n1. AI Product Innovation & Consumer Insights (GenAI ideation + idea-scoring framework)\n2. EyeDentify (99.04% accurate blink biometrics)\n3. Smart Drone Surveillance (YOLOv8 city monitoring)\n4. Medicinal Plant Identification (Ayush SIH Chatbot)\n5. Crop Disease Detection (90%+ CNN pathology detection)\n6. Multi-Modal Emotion Recognition (audio/visual/text sentiment)",
-  assistant_identity: "I am Shreyash's virtual AI assistant. I'm running locally on their portfolio website to help answer questions about their background, skills, projects, education, and career achievements!",
-  hire_fit: "Absolutely. Shreyash has led AI engineering teams, worked at NVIDIA, published international papers, and holds a strong academic track record in Computer Science (Master's from USyd). They are fully equipped to drive AI engineering and machine learning solutions.",
-  default: "I'm not completely sure about that. Try asking about 'skills', 'experience', 'NVIDIA', 'publications', 'education', or 'contact'!"
+// ========================================================================
+// Shreyash-AI Chat Engine v2 — fuzzy local retrieval QA
+// (typo-tolerant scoring · multi-intent · follow-up chips · "tell me more")
+// ========================================================================
+
+const CHAT_CV_URL = './assets/Shreyash_Wetal_CV.pdf';
+
+// --- Knowledge base: label + match words/phrases + answer (+more, +follow) ---
+const CHAT_KB = [
+  {
+    id: 'about', label: 'About Shreyash',
+    words: ['shreyash', 'wetal', 'profile', 'introduce', 'introduction', 'summary', 'background', 'himself', 'overview', 'bio'],
+    phrases: ['who is', 'about him', 'about shreyash'],
+    answer: "Shreyash Wetal is a Sydney-based AI Engineer & researcher. Currently: Master of CS (AI & Data Science) student and AI Research Student at the University of Sydney, working on medical image analysis. Previously: AI Engineer & Team Lead at The Modern Group and Associate Prompt Engineer at NVIDIA. Specialties: GenAI, LLM/RAG systems, and computer vision — with 3 peer-reviewed publications.",
+    more: "Beyond the titles: he published EyeDentify (99.04% blink biometrics, AJCAI 2025 Springer), won the FIAT/TATA Trusts scholarship 4 years running, reached the national top 20 in robotics, and built everything from drone surveillance to GenAI product-innovation frameworks. He likes turning research into things people actually use.",
+    follow: ['His experience', 'His projects', 'How to contact him']
+  },
+  {
+    id: 'skills', label: 'Skills',
+    words: ['skill', 'skills', 'stack', 'tools', 'technologies', 'technology', 'framework', 'frameworks', 'libraries', 'expertise', 'proficient', 'competencies'],
+    phrases: ['tech stack', 'what does he know', 'what can he do'],
+    answer: "Shreyash's stack:\n• GenAI & LLMs: OpenAI API, RAG pipelines, prompt engineering, embeddings, vector DBs, LLM evaluation, transformers\n• Languages: Python, C/C++, SQL, HTML/CSS\n• AI/ML: TensorFlow, OpenCV, LangChain, Scikit-Learn, NLTK, Pandas, Gensim\n• Platforms: ROS, Gazebo, YOLOv8, Flask, Django, GCP, Firebase, REST APIs, CI/CD",
+    more: "He also works with U-Net/DeepLabV3+ segmentation architectures (current USyd research), Excel dashboards and analytics reporting, QGIS/GDAL geospatial tooling, and Twilio/Digital Ocean integrations. Certifications: TensorFlow Developer (DeepLearning.AI), Deep Learning Specialization, LangChain Apps, JP Morgan Quant Modelling.",
+    follow: ['GenAI skills', 'Certifications', 'His projects']
+  },
+  {
+    id: 'genai', label: 'GenAI & LLM work',
+    words: ['genai', 'llm', 'llms', 'rag', 'prompt', 'prompting', 'embeddings', 'chatgpt', 'gemini', 'openai', 'langchain', 'transformer', 'transformers', 'generative', 'agents'],
+    phrases: ['vector database', 'generative ai', 'prompt engineering'],
+    answer: "GenAI is Shreyash's core strength:\n• NVIDIA — enterprise prompt frameworks that improved LLM response precision by 22%, plus automated prompt-evaluation pipelines\n• The Modern Group — RAG systems with vector retrieval that lifted retrieval accuracy 30%\n• AI Product Innovation project — ChatGPT/Gemini ideation workflows with an idea-scoring framework\n• Stack: OpenAI API, LangChain, embeddings, vector DBs, LLM evaluation",
+    follow: ['NVIDIA role', 'Modern Group role', 'AI Product Innovation project']
+  },
+  {
+    id: 'mlcv', label: 'ML & Computer Vision',
+    words: ['ml', 'machine', 'deep', 'vision', 'opencv', 'tensorflow', 'pytorch', 'cnn', 'cnns', 'yolo', 'yolov8', 'nlp', 'neural', 'segmentation', 'detection', 'classification'],
+    phrases: ['machine learning', 'deep learning', 'computer vision', 'good at'],
+    answer: "Yes — ML/CV is where Shreyash publishes and ships:\n• EyeDentify blink biometrics: 99.04% accuracy (AJCAI 2025, Springer)\n• Medical image segmentation research at USyd: Dice +12% with U-Net/DeepLabV3+\n• YOLOv8 drone surveillance (ICSC 2024, Springer)\n• CNN crop-disease and plant-identification systems (90%+ accuracy)",
+    follow: ['EyeDentify', 'His research at USyd', 'Publications']
+  },
+  {
+    id: 'experience', label: 'Experience',
+    words: ['experience', 'work', 'worked', 'working', 'job', 'jobs', 'career', 'role', 'roles', 'company', 'companies', 'employment', 'employer', 'history'],
+    phrases: ['work experience', 'where has he worked', 'work history'],
+    answer: "Shreyash's experience:\n1. Research Student (AI), University of Sydney — Mar 2025–now: medical image analysis, Dice +12%, U-Net/DeepLabV3+ benchmarking\n2. AI Engineer & Team Lead, The Modern Group, Sydney — Jun–Dec 2025: RAG retrieval +30%, deployment cycles −40%, ETL for 100K+ records\n3. Associate Prompt Engineer, NVIDIA, Santa Clara — Oct–Dec 2024: LLM response precision +22%\n4. Team Automatons (ABU Robocon) — 2021–22: ROS, Arduino, image processing",
+    more: "At Robocon he built and tested robots for the ABU Robocon competition — ROS, Arduino, sensor interfacing, and meticulous test plans. That robotics foundation later fed into his UAV surveillance research.",
+    follow: ['USyd research', 'NVIDIA role', 'Modern Group role']
+  },
+  {
+    id: 'usyd', label: 'USyd AI Research',
+    words: ['research', 'researcher', 'medical', 'imaging', 'unet', 'deeplab', 'deeplabv3', 'dice', 'iou'],
+    phrases: ['research student', 'medical image', 'current role', 'university research', 'usyd research', 'his research'],
+    answer: "Since March 2025, Shreyash is a Research Student (AI) at the University of Sydney working on deep learning for medical image analysis: improved Dice score by 12% via preprocessing, augmentation and tuning; benchmarked U-Net vs DeepLabV3+; and built cross-validation/evaluation pipelines tracking IoU, F1, precision-recall, and ROC.",
+    follow: ['Publications', 'His education', 'Experience overview']
+  },
+  {
+    id: 'tmg', label: 'The Modern Group',
+    words: ['modern', 'tmg'],
+    phrases: ['modern group', 'team lead'],
+    answer: "At The Modern Group (Sydney, Jun–Dec 2025), Shreyash was AI Engineer & Team Lead:\n• RAG pipelines with vector retrieval → retrieval accuracy +30%\n• Real-time inference APIs on Firebase/GCP → deployment cycle time −40%\n• AI decision-support workflows → contextual relevance +25%\n• ETL pipelines & analytics for 100K+ records",
+    follow: ['NVIDIA role', 'USyd research', 'His skills']
+  },
+  {
+    id: 'nvidia', label: 'NVIDIA',
+    words: ['nvidia'],
+    phrases: ['prompt engineer', 'santa clara'],
+    answer: "At NVIDIA (Santa Clara, remote — Oct to Dec 2024), Shreyash was an Associate Prompt Engineer: engineered enterprise-grade prompt frameworks improving LLM response precision by 22%, ran A/B tests across transformer models for accuracy/clarity/consistency, and built automated prompt-evaluation pipelines for output quality assessment and NLP benchmarking.",
+    follow: ['GenAI skills', 'Modern Group role', 'Experience overview']
+  },
+  {
+    id: 'robotics', label: 'Robotics',
+    words: ['robocon', 'robotics', 'robot', 'robots', 'arduino', 'automatons', 'robokidz'],
+    answer: "Robotics roots: Shreyash was part of Team Automatons for ABU Robocon (2021–22) — ROS, Arduino, sensor interfacing and image processing. Earlier, he placed in the national Top 20 at the RoboKidz Soccer Bot Competition, representing India internationally.",
+    follow: ['UAV surveillance', 'His achievements', 'Experience overview']
+  },
+  {
+    id: 'projects', label: 'Projects',
+    words: ['project', 'projects', 'built', 'build', 'portfolio', 'made', 'showcase'],
+    phrases: ['case study', 'case studies', 'what has he built'],
+    answer: "Shreyash's 6 flagship projects:\n1. AI Product Innovation & Consumer Insights — GenAI ideation + idea-scoring framework\n2. EyeDentify — 99.04% blink biometrics (AJCAI 2025)\n3. Urban UAV Surveillance — YOLOv8 drone monitoring (ICSC 2024)\n4. Medicinal Plant ID — SIH project for the Ayush Ministry\n5. Crop Disease Detection — 90%+ CNN pathology classifier\n6. Multi-Modal Emotion Recognition — audio + face + text",
+    follow: ['EyeDentify', 'UAV surveillance', 'AI Product Innovation project']
+  },
+  {
+    id: 'eyedentify', label: 'EyeDentify',
+    words: ['eyedentify', 'blink', 'biometric', 'biometrics', 'coti', 'miti', 'mobilenet', 'mobilenetv2'],
+    answer: "EyeDentify is Shreyash's flagship research: non-invasive biometric identification from blink patterns. He introduced two novel spatio-temporal templates — COTI (Colour Outline Time Image) and MITI (Mean Intensity Time Image) — reaching 99.04% accuracy on NTHU-DDD and 94.78% on UTA-RLDD with MobileNetV2. Published at AJCAI 2025 (Springer): https://link.springer.com/chapter/10.1007/978-981-95-4972-6_16",
+    follow: ['Other publications', 'His projects', 'UAV surveillance']
+  },
+  {
+    id: 'uav', label: 'UAV Surveillance',
+    words: ['uav', 'drone', 'drones', 'surveillance', 'gazebo', 'orb', 'gdal', 'aerial'],
+    answer: "The Urban UAV Surveillance project: an AI drone system for real-time traffic monitoring and emergency detection — YOLOv8 object detection on the UAV stream, flights simulated in Gazebo/ROS, ORB feature extraction with GDAL geo-tagging to plot anomalies on dashboards. Published at ICSC 2024 (Springer): https://link.springer.com/chapter/10.1007/978-981-96-7818-1_35",
+    follow: ['EyeDentify', 'His projects', 'Publications']
+  },
+  {
+    id: 'plants', label: 'Medicinal Plant ID',
+    words: ['plant', 'plants', 'medicinal', 'ayush', 'sih', 'hackathon'],
+    answer: "Medicinal Plant Identification — a Smart India Hackathon project for the Ayush Ministry: CNN + HOG + Random Forest models classify medicinal plants from photos, paired with a LangChain-powered chatbot that explains each plant's properties in real time. Code: https://github.com/ShreyashW32/Medicinal-Plant-Classification",
+    follow: ['Crop disease detection', 'His projects', 'GenAI skills']
+  },
+  {
+    id: 'crop', label: 'Crop Disease Detection',
+    words: ['crop', 'leaf', 'disease', 'agriculture', 'farming', 'hog'],
+    answer: "Crop Leaf Disease Detection: a CNN classifier fused with Random Forest over HOG-featured datasets, detecting crop leaf diseases at 90%+ accuracy for rapid field diagnostics. Code: https://github.com/ShreyashW32/plantleafdiseasedetection",
+    follow: ['Medicinal plant ID', 'His projects', 'ML & CV expertise']
+  },
+  {
+    id: 'emotion', label: 'Emotion Recognition',
+    words: ['emotion', 'emotions', 'multimodal', 'sentiment', 'speech', 'facial'],
+    answer: "Multi-Modal Emotion Recognition: combines vocal pitch (audio), facial expressions (vision), and text sentiment into one robust emotion detector for human-computer interaction. Code: https://github.com/ShreyashW32/Multimodel-emotion-recognition",
+    follow: ['His projects', 'ML & CV expertise', 'Contact details']
+  },
+  {
+    id: 'genai_project', label: 'AI Product Innovation',
+    words: ['innovation', 'consumer', 'insights', 'ideation', 'persona', 'personas', 'concept', 'concepts', 'scoring'],
+    phrases: ['product innovation', 'market research'],
+    answer: "The AI Product Innovation & Consumer Insights framework: a GenAI workflow using ChatGPT/Gemini to generate product concepts, consumer personas, claims and market-research summaries — scored by an idea-evaluation framework (feasibility, consumer relevance, differentiation, evidence strength, commercial potential), with Python/Excel dashboards for decision-making.",
+    follow: ['GenAI skills', 'His projects', 'Is he available for hire?']
+  },
+  {
+    id: 'publications', label: 'Publications',
+    words: ['publication', 'publications', 'paper', 'papers', 'published', 'springer', 'ajcai', 'icsc', 'ijsart', 'journal', 'conference', 'citation'],
+    answer: "Shreyash has 3 peer-reviewed publications:\n1. EyeDentify (AJCAI 2025, Springer) — blink biometrics: https://link.springer.com/chapter/10.1007/978-981-95-4972-6_16\n2. Smart Drone Surveillance (ICSC 2024, Springer): https://link.springer.com/chapter/10.1007/978-981-96-7818-1_35\n3. Intelligent Auto Traffic Signal Controller (IJSART) — emergency vehicle prioritization",
+    follow: ['EyeDentify', 'His research at USyd', 'His achievements']
+  },
+  {
+    id: 'achievements', label: 'Achievements',
+    words: ['achievement', 'achievements', 'award', 'awards', 'scholarship', 'fiat', 'tata', 'honor', 'honors', 'finalist', 'won', 'winner'],
+    answer: "Highlights:\n• FIAT India / TATA Trusts Academic Excellence Scholarship (₹1L annually, 2020–2024)\n• Top 20 National Finalist — RoboKidz International Robotics Competition\n• 3 peer-reviewed publications (2× Springer)\n• Workshop Coordinator at SIAC Baramati under TATA Trusts",
+    follow: ['Publications', 'His education', 'About Shreyash']
+  },
+  {
+    id: 'education', label: 'Education',
+    words: ['education', 'degree', 'degrees', 'university', 'usyd', 'college', 'pccoe', 'wam', 'cgpa', 'gpa', 'grades', 'masters', 'master', 'bachelor', 'bachelors', 'btech', 'study', 'studies', 'studying', 'qualification', 'qualifications'],
+    phrases: ['university of sydney'],
+    answer: "Education:\n• Master of Computer Science (AI & Data Science), University of Sydney — 2025–2027, WAM 75, plus a research assistantship in medical imaging\n• B.Tech in Information Technology, Pimpri Chinchwad College of Engineering, Pune — 2020–2024, CGPA 8.57/10",
+    follow: ['USyd research', 'Certifications', 'His achievements']
+  },
+  {
+    id: 'certs', label: 'Certifications',
+    words: ['certification', 'certifications', 'certificate', 'certificates', 'certified', 'coursera', 'deeplearning', 'forage', 'jpmorgan'],
+    answer: "Certifications:\n• TensorFlow Developer Professional Certificate (DeepLearning.AI)\n• Deep Learning Specialization\n• LangChain Application Development\n• Object Detection Web Apps (TensorFlow/OpenCV)\n• JP Morgan Quantitative Modelling (Forage)",
+    follow: ['His skills', 'His education', 'His projects']
+  },
+  {
+    id: 'contact', label: 'Contact',
+    words: ['contact', 'email', 'mail', 'phone', 'number', 'reach', 'connect', 'linkedin', 'github', 'socials', 'call', 'message'],
+    phrases: ['get in touch', 'reach out', 'talk to'],
+    answer: "Reach Shreyash here:\n• Email: shreyash.wetal03@gmail.com\n• Phone: +61 0451 507 744 (Sydney, AEST)\n• LinkedIn: https://www.linkedin.com/in/shreyash-w-388bb4223/\n• GitHub: https://github.com/ShreyashW32",
+    follow: [{ label: '⬇ Download CV (PDF)', act: () => window.open(CHAT_CV_URL, '_blank', 'noopener') }, 'Is he available for hire?'],
+  },
+  {
+    id: 'resume', label: 'Résumé / CV',
+    words: ['resume', 'cv', 'download', 'pdf'],
+    phrases: ['his cv', 'his resume', 'curriculum vitae'],
+    answer: "You can grab Shreyash's CV as a PDF here: https://shreyashw32.github.io/shreyash_portfollio/assets/Shreyash_Wetal_CV.pdf — or use the button below. Tip: pressing Ctrl+P on this site prints a clean résumé version of the whole page.",
+    follow: [{ label: '⬇ Download CV (PDF)', act: () => window.open(CHAT_CV_URL, '_blank', 'noopener') }, 'Contact details', 'Is he available for hire?'],
+  },
+  {
+    id: 'hire', label: 'Availability',
+    words: ['hire', 'hiring', 'available', 'availability', 'opportunity', 'opportunities', 'recruit', 'recruiter', 'join', 'position', 'positions', 'vacancy', 'openings', 'freelance', 'intern', 'internship', 'collaborate', 'collaboration'],
+    phrases: ['open to work', 'looking for work', 'good fit', 'why should'],
+    answer: "Shreyash is open to AI/ML engineering roles, research collaborations, and internships — he's NVIDIA-alumni, has led an AI team in Sydney, published 3 papers, and ships production systems. Currently based in Sydney while completing his Master's at USyd. The fastest way to start the conversation: shreyash.wetal03@gmail.com",
+    follow: [{ label: '⬇ Download CV (PDF)', act: () => window.open(CHAT_CV_URL, '_blank', 'noopener') }, 'Contact details', 'His experience'],
+  },
+  {
+    id: 'logistics', label: 'Salary / visa / logistics',
+    words: ['salary', 'visa', 'sponsorship', 'relocation', 'relocate', 'rate', 'rates', 'compensation', 'notice', 'remote', 'onsite', 'hybrid'],
+    answer: "For specifics like salary expectations, work rights/visa status, notice period, or remote/on-site preferences, it's best to ask Shreyash directly — he responds quickly at shreyash.wetal03@gmail.com.",
+    follow: ['Contact details', { label: '⬇ Download CV (PDF)', act: () => window.open(CHAT_CV_URL, '_blank', 'noopener') }],
+  },
+  {
+    id: 'location', label: 'Location',
+    words: ['location', 'located', 'based', 'live', 'lives', 'city', 'timezone', 'australia'],
+    phrases: ['where is he', 'based in', 'come from'],
+    answer: "Shreyash is based in Sydney, Australia (AEST timezone) while completing his Master's at the University of Sydney. He's originally from Pune, India, where he did his B.Tech at PCCOE.",
+    follow: ['His education', 'Is he available for hire?', 'Contact details']
+  },
+  {
+    id: 'website', label: 'This website',
+    words: ['website'],
+    phrases: ['this site', 'this website', 'who built', 'who made', 'site built', 'website built'],
+    answer: "This site is hand-built with vanilla HTML/CSS/JS — no frameworks. The background is a 3D neural globe rendered on a raw canvas, there's a Ctrl+K command palette, a typeable terminal (try 'neofetch' in the hero console!), an adaptive Visitor Lens, four color themes, and a hardened Content-Security-Policy. Source: https://github.com/ShreyashW32/shreyash_portfollio",
+    follow: ['His projects', 'His skills', 'About Shreyash']
+  },
+  {
+    id: 'joke', label: 'Joke',
+    words: ['joke', 'funny', 'laugh', 'humor'],
+    answer: "Why did the neural network break up with the decision tree? Too many branches, not enough depth. 🤖\n\n(Shreyash's models have plenty of depth — 99.04% on EyeDentify.)",
+    follow: ['His projects', 'About Shreyash']
+  }
+];
+
+// --- tiny bounded Levenshtein for typo tolerance ---
+const chatLev = (a, b) => {
+  if (a === b) return 0;
+  if (Math.abs(a.length - b.length) > 2) return 3;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
 };
 
-// Keyword matcher function — uses word-boundary checks to avoid false substring matches
-const getBotResponse = (input) => {
-  const query = input.toLowerCase().trim();
-  
-  // Helper: check if any keyword appears as a whole word (or phrase) in the query
-  const hasWord = (...words) => words.some(w => {
-    if (w.includes(' ')) return query.includes(w); // multi-word phrases use simple includes
-    return new RegExp(`\\b${w}\\b`).test(query);
+// exact word = 3 pts, close typo = 2 pts, phrase hit = 6 pts
+const chatFuzzy = (token, word) => {
+  if (token === word) return 3;
+  if (word.length >= 5 && token.length >= 4 && chatLev(token, word) <= (word.length >= 8 ? 2 : 1)) return 2;
+  return 0;
+};
+
+const CHAT_STOP = new Set(['the', 'a', 'an', 'is', 'are', 'was', 'were', 'do', 'does', 'did', 'of', 'in', 'at', 'on', 'to', 'for', 'me', 'my', 'i', 'you', 'your', 'his', 'her', 'their', 'what', 'whats', 'tell', 'about', 'can', 'could', 'how', 'who', 'whos', 'which', 'with', 'and', 'or', 'he', 'she', 'they', 'them', 'it', 'its', 'this', 'that', 'have', 'has', 'had', 'any', 'some', 'get', 'give', 'show', 'list', 'please', 'u', 'ur', 'im', 'am', 'be', 'been', 'so', 'but', 'if', 'then', 'there', 'here', 'from', 'by', 'as', 'more']);
+
+let chatLastIntent = null;
+
+const chatAnswer = (raw) => {
+  const query = ' ' + raw.toLowerCase().replace(/[^a-z0-9\s+#./@-]/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
+  const q = query.trim();
+  const tokens = q.split(' ').filter((t) => t.length > 1 && !CHAT_STOP.has(t));
+
+  // --- small talk ---
+  if (/^(hi+|hello+|hey+|heya|yo|howdy|sup|g'?day|good (morning|afternoon|evening))\b/.test(q)) {
+    return { text: "Hey! 👋 I'm Shreyash's AI assistant. Ask me anything about his skills, experience, research, projects, or how to reach him — typos welcome.", follow: ['His experience', 'His projects', 'Contact details'] };
+  }
+  if (/how are you|how'?s it going|hows it going/.test(q)) {
+    return { text: "Running at full inference speed, thanks for asking! 🤖 What would you like to know about Shreyash?", follow: ['About Shreyash', 'His projects'] };
+  }
+  if (/\b(thanks|thank you|thankyou|thx|ty|cheers)\b/.test(q)) {
+    return { text: "You're welcome! Anything else you'd like to know? If you'd rather talk to the human: shreyash.wetal03@gmail.com", follow: ['Contact details', { label: '⬇ Download CV (PDF)', act: () => window.open(CHAT_CV_URL, '_blank', 'noopener') }] };
+  }
+  if (/\b(bye|goodbye|see ya|see you|later|good night)\b/.test(q)) {
+    return { text: "Goodbye! 👋 Thanks for stopping by — Shreyash is one email away if anything comes up: shreyash.wetal03@gmail.com", follow: [] };
+  }
+  if (/who are you|what are you|your name|are you (a |an )?(bot|ai|human|real|llm)/.test(q)) {
+    return { text: "I'm Shreyash's on-site AI assistant — a fully local retrieval engine (no external API, your questions never leave this page). I know his CV inside out: skills, roles, research, projects, publications, and contact details.", follow: ['About Shreyash', 'What can you answer?'] };
+  }
+  if (/^(help|menu|options)$|what can (you|i) (do|ask|answer)|what do you know/.test(q)) {
+    return { text: "I can answer questions about:\n• Skills & GenAI/LLM expertise\n• Experience (USyd research, The Modern Group, NVIDIA, Robocon)\n• All 6 projects & 3 publications\n• Education, certifications, achievements\n• Availability, contact info, and his CV\n\nAsk naturally — I handle typos and multi-part questions.", follow: ['His experience', 'His projects', 'Contact details'] };
+  }
+
+  // --- "tell me more" follow-up context ---
+  if (/^(more|tell me more|more details|details|elaborate|go on|continue)\??$/.test(q) && chatLastIntent) {
+    if (chatLastIntent.more) return { text: chatLastIntent.more, follow: chatLastIntent.follow };
+    return { text: "That's the full picture I have on " + chatLastIntent.label.toLowerCase() + " — but try one of these:", follow: chatLastIntent.follow || ['His projects', 'His experience'] };
+  }
+
+  // --- retrieval scoring ---
+  const scored = CHAT_KB.map((e) => {
+    let s = 0;
+    (e.phrases || []).forEach((p) => { if (q.includes(p)) s += 6; });
+    (e.words || []).forEach((w) => {
+      let best = 0;
+      tokens.forEach((t) => { const f = chatFuzzy(t, w); if (f > best) best = f; });
+      s += best;
+    });
+    return { e, s };
+  }).sort((a, b) => b.s - a.s);
+
+  if (scored[0] && scored[0].s >= 3) {
+    chatLastIntent = scored[0].e;
+    let text = scored[0].e.answer;
+    // multi-intent: merge a strong second topic ("skills and contact?")
+    if (scored[1] && scored[1].s >= 3 && /(\band\b|,|\+|also)/.test(q)) {
+      text += '\n\n— and on ' + scored[1].e.label.toLowerCase() + ' —\n' + scored[1].e.answer;
+    }
+    return { text, follow: scored[0].e.follow };
+  }
+
+  // near-miss: single fuzzy hit → answer with a hedge
+  if (scored[0] && scored[0].s === 2) {
+    chatLastIntent = scored[0].e;
+    return { text: 'I might be misreading, but I think you\'re asking about ' + scored[0].e.label.toLowerCase() + ':\n\n' + scored[0].e.answer, follow: scored[0].e.follow };
+  }
+
+  // true fallback
+  return {
+    text: "Hmm, that one's outside my training data 😅 — I know Shreyash's skills, experience, research, projects, publications, education, and contact info. For anything else, he's at shreyash.wetal03@gmail.com. Try one of these:",
+    follow: ['His experience', 'His projects', 'Contact details', 'What can you answer?']
+  };
+};
+
+// --- rendering: escape + linkify (emails/URLs clickable), typewriter, chips ---
+const chatEscape = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const chatLinkify = (s) => chatEscape(s)
+  .replace(/(https?:\/\/[^\s<)]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
+  .replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, '<a href="mailto:$1">$1</a>')
+  .replace(/\n/g, '<br>');
+
+const chatAppendUser = (text) => {
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-message user-message';
+  bubble.textContent = text;
+  chatbotMessages.appendChild(bubble);
+  chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+};
+
+const chatRenderFollowups = (items) => {
+  if (!items || !items.length) return;
+  chatbotMessages.querySelectorAll('.followup-chips').forEach((el) => el.remove());
+  const row = document.createElement('div');
+  row.className = 'followup-chips';
+  items.forEach((it) => {
+    const label = typeof it === 'string' ? it : it.label;
+    const btn = document.createElement('button');
+    btn.className = 'suggestion-chip';
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      if (typeof it !== 'string' && it.act) { it.act(); return; }
+      chatSend(label);
+    });
+    row.appendChild(btn);
   });
-
-  // Identity
-  if (hasWord('who are you', 'what are you', 'your name', 'identity', 'assistant')) {
-    return botResponses.assistant_identity;
-  }
-  // About Shreyash
-  if (hasWord('who is shreyash', 'about shreyash', 'tell me about shreyash', 'tell me about him', 'profile', 'introduce')) {
-    return botResponses.who_is;
-  }
-  // Greetings — use word boundaries so "shreyash" doesn't match "hi"
-  if (hasWord('hi', 'hello', 'hey', 'greet', 'welcome', 'howdy', 'sup')) {
-    return botResponses.greetings;
-  }
-  // Skills / tech stack — THIS WAS MISSING
-  if (hasWord('skill', 'skills', 'tech stack', 'stack', 'tools', 'technologies', 'languages', 'framework', 'certification', 'certifications', 'proficient', 'knows', 'know')) {
-    return botResponses.skills;
-  }
-  // ML / AI expertise — "good at X" questions
-  if (hasWord('good at', 'machine learning', 'deep learning', 'computer vision', 'nlp', 'artificial intelligence', 'neural', 'tensorflow', 'opencv', 'pyspark', 'pytorch', 'ml', 'dl', 'llm', 'rag', 'langchain')) {
-    return botResponses.ml_expertise;
-  }
-  // NVIDIA
-  if (hasWord('nvidia', 'prompt engineer')) {
-    return botResponses.nvidia;
-  }
-  // Experience
-  if (hasWord('experience', 'work', 'job', 'modern group', 'role', 'career', 'team lead', 'company', 'employed', 'employment')) {
-    return botResponses.experience;
-  }
-  // Projects
-  if (hasWord('project', 'build', 'built', 'portfolio', 'case study', 'uav', 'drone', 'plant', 'crop', 'emotion', 'blink')) {
-    return botResponses.projects_summary;
-  }
-  // Publications
-  if (hasWord('publication', 'paper', 'research', 'eyedentify', 'journal', 'conference', 'springer', 'ajcai', 'published')) {
-    return botResponses.publications;
-  }
-  // Education
-  if (hasWord('education', 'study', 'studying', 'university', 'usyd', 'sydney', 'college', 'degree', 'wam', 'cgpa', 'master', 'bachelor', 'pccoe')) {
-    return botResponses.education;
-  }
-  // Contact / Hire
-  if (hasWord('contact', 'email', 'phone', 'hire', 'reach', 'linkedin', 'github', 'resume', 'qualifications', 'candidate')) {
-    return botResponses.hire_fit;
-  }
-  
-  return botResponses.default;
+  chatbotMessages.appendChild(row);
+  chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
 };
 
-// Append message bubble to log
-const appendMessage = (text, isUser = false) => {
-  const messageBubble = document.createElement('div');
-  messageBubble.classList.add('chat-message');
-  messageBubble.classList.add(isUser ? 'user-message' : 'bot-message');
-  
-  if (isUser) {
-    messageBubble.textContent = text;
-    chatbotMessages.appendChild(messageBubble);
+const chatAppendBot = (text, follow) => {
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-message bot-message';
+  chatbotMessages.appendChild(bubble);
+
+  const finish = () => {
+    bubble.innerHTML = chatLinkify(text);
+    chatRenderFollowups(follow);
     chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-  } else {
-    // Typewriter effect for bot response
-    chatbotMessages.appendChild(messageBubble);
-    let index = 0;
-    
-    // Replace newlines with <br> for formatting
-    const formattedText = text.replace(/\n/g, '<br>');
-    messageBubble.innerHTML = '';
-    
-    // Simple streaming typist
-    let currentHTML = '';
-    let i = 0;
-    const typingInterval = setInterval(() => {
-      if (i < text.length) {
-        if (text.charAt(i) === '\n') {
-          currentHTML += '<br>';
-        } else {
-          currentHTML += text.charAt(i);
-        }
-        messageBubble.innerHTML = currentHTML + '<span class="console-cursor" style="width:5px; height:12px;"></span>';
-        i++;
-        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-      } else {
-        messageBubble.innerHTML = currentHTML; // remove cursor
-        clearInterval(typingInterval);
-      }
-    }, 8);
-  }
+  };
+
+  if (REDUCED_MOTION) { finish(); return; }
+
+  let i = 0;
+  const step = text.length > 500 ? 4 : text.length > 220 ? 2 : 1;
+  const timer = setInterval(() => {
+    if (i < text.length) {
+      i += step;
+      bubble.innerHTML = chatLinkify(text.slice(0, i)) + '<span class="console-cursor" style="width:5px; height:12px;"></span>';
+      chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    } else {
+      clearInterval(timer);
+      finish();
+    }
+  }, 9);
 };
 
-// Handle sending message
-const handleChatSend = () => {
-  const userText = chatbotInput.value.trim();
-  if (!userText) return;
-  
-  // User bubble
-  appendMessage(userText, true);
-  chatbotInput.value = '';
-  
-  // Remove suggestions panel if any custom message is sent
+// --- send pipeline ---
+const chatSend = (queryText) => {
+  const text = (queryText || '').trim();
+  if (!text) return;
+
+  chatAppendUser(text);
+
+  // retire the initial suggestions panel + stale followups
   const suggestionsContainer = document.getElementById('chatbot-suggestions');
-  if (suggestionsContainer) {
-    suggestionsContainer.remove();
-  }
-  
-  // Bot reply simulation
+  if (suggestionsContainer) suggestionsContainer.remove();
+  chatbotMessages.querySelectorAll('.followup-chips').forEach((el) => el.remove());
+
   setTimeout(() => {
-    const reply = getBotResponse(userText);
-    appendMessage(reply, false);
-  }, 400);
+    const { text: reply, follow } = chatAnswer(text);
+    chatAppendBot(reply, follow);
+  }, 350);
 };
 
 if (chatbotSend && chatbotInput) {
-  chatbotSend.addEventListener('click', handleChatSend);
+  chatbotSend.addEventListener('click', () => { chatSend(chatbotInput.value); chatbotInput.value = ''; });
   chatbotInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      handleChatSend();
-    }
+    if (e.key === 'Enter') { chatSend(chatbotInput.value); chatbotInput.value = ''; }
   });
 }
 
-// Staggered Suggestion click hooks
+// initial suggestion chips route through the same engine
 if (chatbotSuggestions) {
-  chatbotSuggestions.forEach(chip => {
-    chip.addEventListener('click', () => {
-      const questionKey = chip.getAttribute('data-question');
-      const questionText = chip.textContent;
-
-      appendMessage(questionText, true);
-
-      // Remove suggestions panel entirely when clicked
-      const suggestionsContainer = document.getElementById('chatbot-suggestions');
-      if (suggestionsContainer) {
-        suggestionsContainer.remove();
-      }
-
-      setTimeout(() => {
-        const replyText = botResponses[questionKey] || botResponses.default;
-        appendMessage(replyText, false);
-      }, 400);
-    });
+  chatbotSuggestions.forEach((chip) => {
+    chip.addEventListener('click', () => chatSend(chip.textContent.trim()));
   });
 }
 
