@@ -2337,3 +2337,136 @@ body.custom-cursor-active input {
   .contact-card { padding: 2rem 1.25rem; }
   .impact-metric { font-size: 2.2rem; }
 }
+
+/* =====================================================
+   MOTION & READABILITY PASS
+   progress bar · title underlines · timeline draw ·
+   chip stagger · metric bars · focus rings · text-wrap
+   ===================================================== */
+
+/* Reading progress bar under the fixed header */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: var(--accent-gradient);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.6);
+  z-index: 1001;
+  pointer-events: none;
+}
+
+/* Anchor links must not land section titles under the fixed header */
+section { scroll-margin-top: 5rem; }
+
+/* Typography: balanced headings, orphan-free paragraphs */
+h1, h2, h3, h4 { text-wrap: balance; }
+p, li { text-wrap: pretty; }
+.hero-intro { max-width: 38rem; }
+
+/* Themed text selection */
+::selection {
+  background: rgba(var(--accent-rgb), 0.35);
+  color: #ffffff;
+}
+
+/* Visible keyboard focus (does not affect mouse users) */
+a:focus-visible, button:focus-visible, input:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Section titles draw an accent underline once revealed */
+.section-title { position: relative; padding-bottom: 0.75rem; }
+.section-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 72px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent-gradient);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.5);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1) 0.3s;
+}
+.section-title.revealed::after { transform: scaleX(1); }
+
+/* Timeline spine draws itself when the section scrolls into view */
+.anim-on .timeline::before {
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 1.6s cubic-bezier(0.25, 1, 0.5, 1) 0.2s;
+}
+.anim-on .timeline.drawn::before { transform: scaleY(1); }
+
+/* Skill chips cascade in as their category reveals */
+.anim-on .skill-category.revealed .skill-chip {
+  animation: chip-in 0.5s cubic-bezier(0.25, 1, 0.5, 1) backwards;
+  animation-delay: calc(var(--ci, 0) * 45ms);
+}
+@keyframes chip-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Impact metric bars fill to their real value on reveal */
+.impact-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.07);
+  margin: 0.35rem auto 0.85rem;
+  max-width: 180px;
+  overflow: hidden;
+}
+.impact-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  background: var(--accent-gradient);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.5);
+  transition: width 1.3s cubic-bezier(0.25, 1, 0.5, 1) 0.45s;
+}
+.impact-card.revealed .impact-bar span { width: var(--pct, 0%); }
+
+/* Primary buttons get a shine sweep on hover */
+.btn-primary { position: relative; overflow: hidden; }
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-160%) skewX(-20deg);
+  pointer-events: none;
+}
+.btn-primary:hover::before { animation: btn-shine 0.7s ease; }
+@keyframes btn-shine {
+  to { transform: translateX(380%) skewX(-20deg); }
+}
+
+@media print {
+  .scroll-progress, .impact-bar { display: none !important; }
+}
+
+/* Reduced motion: everything lands instantly, nothing moves */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .section-title::after { transform: scaleX(1); transition: none; }
+  .anim-on .timeline::before { transform: scaleY(1); transition: none; }
+  .anim-on .skill-category.revealed .skill-chip { animation: none; }
+  .impact-bar span { transition: none; }
+  .impact-card .impact-bar span { width: var(--pct, 0%); }
+  .btn-primary:hover::before { animation: none; }
+}

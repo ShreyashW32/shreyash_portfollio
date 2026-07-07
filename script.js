@@ -1466,3 +1466,43 @@ Tip: type 'resume' for a printable CV.`;
     document.title = document.hidden ? '🧠 Model still training — come back!' : original;
   });
 })();
+
+// ------------------------------------------------------------------------
+// 12. Motion pass: reading progress bar · timeline draw · chip stagger
+// ------------------------------------------------------------------------
+(function () {
+  // reading progress bar
+  const bar = document.getElementById('scroll-progress');
+  if (bar) {
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%';
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  if (REDUCED_MOTION) return;
+  document.body.classList.add('anim-on');
+
+  // per-chip stagger index for the cascade animation
+  document.querySelectorAll('.skill-chips').forEach((wrap) => {
+    wrap.querySelectorAll('.skill-chip').forEach((chip, i) => {
+      chip.style.setProperty('--ci', i);
+    });
+  });
+
+  // timeline spine draws when the section enters the viewport
+  const timeline = document.querySelector('.timeline');
+  if (timeline && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('drawn');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    io.observe(timeline);
+  }
+})();
