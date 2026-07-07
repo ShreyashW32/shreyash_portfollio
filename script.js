@@ -922,6 +922,10 @@ const FINE_POINTER =
     { group: 'Actions', icon: 'bx-palette', label: 'Cycle color theme', hint: 'appearance', run: () => {
         if (window.__cycleTheme) window.__cycleTheme();
       } },
+    { group: 'Actions', icon: 'bx-printer', label: 'Print / save résumé (PDF)', hint: 'ctrl+p', run: () => window.print() },
+    { group: 'Lens', icon: 'bx-code-alt', label: 'View as Engineer', hint: 'adaptive mode', run: () => window.__setLens && window.__setLens('engineer') },
+    { group: 'Lens', icon: 'bx-briefcase-alt-2', label: 'View as Recruiter', hint: 'adaptive mode', run: () => window.__setLens && window.__setLens('recruiter') },
+    { group: 'Lens', icon: 'bx-book', label: 'View as Researcher', hint: 'adaptive mode', run: () => window.__setLens && window.__setLens('researcher') },
     { group: 'Links', icon: 'bxl-github', label: 'GitHub', hint: 'ShreyashW32', run: openLink('https://github.com/ShreyashW32') },
     { group: 'Links', icon: 'bxl-linkedin', label: 'LinkedIn', hint: 'profile', run: openLink('https://www.linkedin.com/in/shreyash-w-388bb4223/') },
     { group: 'Links', icon: 'bx-file', label: 'EyeDentify paper (AJCAI 2025)', hint: 'springer', run: openLink('https://link.springer.com/chapter/10.1007/978-981-95-4972-6_16') }
@@ -1137,13 +1141,15 @@ const FINE_POINTER =
 
   const apply = (name, save = true) => {
     const t = THEMES[name];
-    if (!t) return;
+    if (!t) return false;
     root.style.setProperty('--accent-rgb', t.rgb.join(', '));
     root.style.setProperty('--accent-rgb-2', t.rgb2.join(', '));
     swatches.forEach((s) => s.classList.toggle('active', s.dataset.theme === name));
     window.dispatchEvent(new CustomEvent('accentchange', { detail: { rgb: t.rgb } }));
     if (save) { try { localStorage.setItem('portfolio-theme', name); } catch (e) {} }
+    return true;
   };
+  window.__setTheme = apply;
 
   swatches.forEach((s) => s.addEventListener('click', () => apply(s.dataset.theme)));
 
@@ -1159,4 +1165,294 @@ const FINE_POINTER =
     ) || 'cyan';
     apply(order[(order.indexOf(active) + 1) % order.length]);
   };
+})();
+
+// ------------------------------------------------------------------------
+// 8. Real Terminal REPL — the hero console accepts typed commands
+// ------------------------------------------------------------------------
+(function () {
+  const term = document.getElementById('terminal-output');
+  const input = document.getElementById('console-input');
+  if (!term || !input) return;
+
+  const HELP = `AVAILABLE COMMANDS
+ whoami      about Shreyash
+ skills      tech stack
+ projects    project index
+ papers      publications
+ nvidia      NVIDIA role log
+ contact     how to reach me
+ neofetch    system card
+ theme <t>   cyan | synthwave | matrix | solar
+ lens <l>    engineer | recruiter | researcher
+ resume      print / save PDF résumé
+ clear       wipe terminal`;
+
+  const PROJECTS = `[PROJECT INDEX]
+ 01 EyeDentify — blink biometrics, 99.04% (AJCAI 2025)
+ 02 UAV Surveillance — YOLOv8 + ROS (ICSC 2024)
+ 03 Medicinal Plant ID — SIH, Ayush Ministry
+ 04 Crop Disease Detection — CNN+RF, 90%+
+ 05 Emotion Recognition — audio · vision · text
+Type 'eyedentify' or 'uav' for a deep dive.`;
+
+  const PAPERS = `[PUBLICATIONS]
+ 1. EyeDentify — AJCAI 2025 (Springer)
+ 2. Smart Drone Surveillance — ICSC 2024 (Springer)
+ 3. Auto Traffic Signal Controller — IJSART`;
+
+  const CONTACT = `[CONTACT]
+ email   : shreyash.wetal03@gmail.com
+ phone   : +61 0451507744
+ github  : github.com/ShreyashW32
+ linkedin: linkedin.com/in/shreyash-w-388bb4223`;
+
+  const NEOFETCH = `     ◉         shreyash@portfolio
+   ◉─┼─◉       ─────────────────
+  ◉  │  ◉      Role  : AI Engineer (Lead)
+   ◉─┼─◉       Org   : Modern Group, SYD
+     ◉         Edu   : MCS @ USyd
+               Papers: 3 peer-reviewed
+               Uptime: 2+ yrs in AI/ML`;
+
+  const SUDO = `[sudo] password for recruiter: ••••••••
+Access granted ✔
+Deploying Shreyash to your team…
+ ▸ status: OPEN TO OPPORTUNITIES
+ ▸ email : shreyash.wetal03@gmail.com
+Tip: type 'resume' for a printable CV.`;
+
+  let typeTimer = null;
+  let pendingDiv = null;
+  let pendingText = '';
+
+  // finish any in-flight typing instantly (new command arrived)
+  const finishTyping = () => {
+    if (typeTimer) { clearInterval(typeTimer); typeTimer = null; }
+    if (pendingDiv) { pendingDiv.textContent = pendingText; pendingDiv = null; }
+  };
+
+  const echo = (cmd) => {
+    finishTyping();
+    // interrupt the chips' auto-typing animation too (like Ctrl+C)
+    if (typeof typingTimer !== 'undefined') clearInterval(typingTimer);
+    const line = document.createElement('div');
+    line.className = 'console-prompt-line';
+    line.innerHTML = `<span class="console-prompt-symbol">$</span><span class="console-input-mock"></span>`;
+    line.querySelector('.console-input-mock').textContent = cmd;
+    term.appendChild(line);
+    term.scrollTop = term.scrollHeight;
+  };
+
+  const reply = (text, instant = false) => {
+    const div = document.createElement('div');
+    div.className = 'console-response';
+    term.appendChild(div);
+    if (instant || REDUCED_MOTION) {
+      div.textContent = text;
+      term.scrollTop = term.scrollHeight;
+      return;
+    }
+    pendingDiv = div;
+    pendingText = text;
+    let i = 0;
+    typeTimer = setInterval(() => {
+      if (i < text.length) {
+        div.textContent += text.charAt(i++);
+        term.scrollTop = term.scrollHeight;
+      } else {
+        clearInterval(typeTimer);
+        typeTimer = null;
+        pendingDiv = null;
+      }
+    }, 6);
+  };
+
+  const respond = (raw) => {
+    echo(raw);
+    const parts = raw.toLowerCase().trim().split(/\s+/);
+    const cmd = parts[0];
+    const arg = parts.slice(1).join(' ');
+
+    switch (cmd) {
+      case 'help': case '?': reply(HELP, true); break;
+      case 'whoami': case 'about': reply(queryResponses.sys_status); break;
+      case 'skills': case 'stack': reply(queryResponses.skills_list); break;
+      case 'nvidia': reply(queryResponses.exp_nvidia); break;
+      case 'eyedentify': reply(queryResponses.project_eyedentify); break;
+      case 'uav': case 'drone': reply(queryResponses.project_uav); break;
+      case 'projects': case 'ls': reply(PROJECTS); break;
+      case 'papers': case 'publications': case 'pubs': reply(PAPERS); break;
+      case 'contact': case 'email': reply(CONTACT); break;
+      case 'neofetch': reply(NEOFETCH, true); break;
+      case 'theme':
+        if (window.__setTheme && window.__setTheme(arg)) reply(`theme set → ${arg}`, true);
+        else reply('usage: theme <cyan|synthwave|matrix|solar>', true);
+        break;
+      case 'lens': case 'view':
+        if (window.__setLens && window.__setLens(arg)) reply(`lens set → ${arg} (hero + projects re-prioritized)`, true);
+        else reply('usage: lens <engineer|recruiter|researcher>', true);
+        break;
+      case 'resume': case 'cv': case 'print':
+        reply('Opening print dialog… choose "Save as PDF".', true);
+        setTimeout(() => window.print(), 350);
+        break;
+      case 'sudo':
+        reply(arg.indexOf('hire') === 0 ? SUDO : `sudo: ${arg || '<command>'}: permission denied`);
+        break;
+      case 'clear':
+        finishTyping();
+        term.innerHTML = '';
+        reply('Console cleared. Type "help" for commands.', true);
+        break;
+      case '': break;
+      default:
+        reply(`command not found: ${cmd} — type 'help'`, true);
+    }
+  };
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const v = input.value.trim();
+      if (v) respond(v);
+      input.value = '';
+    }
+  });
+
+  // clicking the terminal focuses the prompt
+  term.addEventListener('click', () => input.focus());
+})();
+
+// ------------------------------------------------------------------------
+// 9. Visitor Lens — the portfolio adapts to who's viewing it
+// ------------------------------------------------------------------------
+(function () {
+  const btns = document.querySelectorAll('.lens-btn');
+  if (!btns.length) return;
+
+  const intro = document.querySelector('.hero-intro');
+  const primaryBtn = document.querySelector('.hero-buttons .btn-primary');
+  const secondaryBtn = document.querySelector('.hero-buttons .btn-secondary');
+  const cards = Array.prototype.slice.call(
+    document.querySelectorAll('.projects-grid .project-card')
+  );
+  // card order in DOM: 0 EyeDentify · 1 UAV · 2 Plants · 3 Crop · 4 Emotion
+
+  const LENSES = {
+    engineer: {
+      intro: 'I design and ship AI systems end-to-end — <span class="highlight">LLM & RAG pipelines</span>, real-time <span class="highlight">computer vision</span>, and the production infrastructure that keeps them fast and reliable. Master\'s @ University of Sydney.',
+      primary: { label: 'View Projects', href: '#projects' },
+      secondary: { label: 'GitHub', href: 'https://github.com/ShreyashW32', blank: true },
+      order: [1, 2, 3, 4, 0],
+      pick: '★ top pick · engineers'
+    },
+    recruiter: {
+      intro: 'Lead AI Engineer with <span class="highlight">NVIDIA experience</span>, 3 published papers, and a record of shipping <span class="highlight">production ML</span> — currently completing a Master\'s at the University of Sydney.',
+      primary: { label: 'Download Résumé', action: 'print-resume' },
+      secondary: { label: 'Get In Touch', href: '#contact' },
+      order: [0, 2, 1, 3, 4],
+      pick: '★ top pick · recruiters'
+    },
+    researcher: {
+      intro: 'My research spans <span class="highlight">non-invasive biometrics</span> and aerial vision — 3 peer-reviewed publications including <span class="highlight">AJCAI 2025 (Springer)</span>, introducing novel COTI & MITI spatio-temporal templates.',
+      primary: { label: 'Read Publications', href: '#publications' },
+      secondary: { label: 'EyeDentify Paper', href: 'https://link.springer.com/chapter/10.1007/978-981-95-4972-6_16', blank: true },
+      order: [0, 1, 4, 3, 2],
+      pick: '★ top pick · researchers'
+    }
+  };
+
+  const setBtn = (el, cfg, withIcon) => {
+    if (!el) return;
+    if (cfg.action) {
+      el.setAttribute('href', '#');
+      el.setAttribute('data-action', cfg.action);
+      el.removeAttribute('target');
+      el.removeAttribute('rel');
+    } else {
+      el.setAttribute('href', cfg.href);
+      el.removeAttribute('data-action');
+      if (cfg.blank) {
+        el.setAttribute('target', '_blank');
+        el.setAttribute('rel', 'noopener noreferrer');
+      } else {
+        el.removeAttribute('target');
+        el.removeAttribute('rel');
+      }
+    }
+    el.innerHTML = cfg.label + (withIcon ? " <i class='bx bx-right-arrow-alt'></i>" : '');
+  };
+
+  const apply = (name, save = true) => {
+    const L = LENSES[name];
+    if (!L) return false;
+    document.body.setAttribute('data-lens', name);
+    btns.forEach((b) => b.classList.toggle('active', b.dataset.lens === name));
+    if (intro) intro.innerHTML = L.intro;
+    setBtn(primaryBtn, L.primary, true);
+    setBtn(secondaryBtn, L.secondary, false);
+
+    // re-prioritize the project grid + move the "top pick" badge
+    document.querySelectorAll('.lens-pick').forEach((el) => el.remove());
+    L.order.forEach((cardIdx, pos) => {
+      const card = cards[cardIdx];
+      if (!card) return;
+      card.style.order = pos;
+      if (pos === 0) {
+        const media = card.querySelector('.project-media');
+        if (media) {
+          const badge = document.createElement('span');
+          badge.className = 'lens-pick';
+          badge.textContent = L.pick;
+          media.appendChild(badge);
+        }
+      }
+    });
+
+    if (save) { try { localStorage.setItem('portfolio-lens', name); } catch (e) {} }
+    return true;
+  };
+
+  btns.forEach((b) => b.addEventListener('click', () => apply(b.dataset.lens)));
+  window.__setLens = apply;
+
+  // delegated print trigger (recruiter CTA, contact button)
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-action="print-resume"]');
+    if (t) { e.preventDefault(); window.print(); }
+  });
+
+  let saved = 'engineer';
+  try { saved = localStorage.getItem('portfolio-lens') || 'engineer'; } catch (e) {}
+  if (!LENSES[saved]) saved = 'engineer';
+  apply(saved, false);
+})();
+
+// ------------------------------------------------------------------------
+// 10. Live Sydney clock in the hero tagline
+// ------------------------------------------------------------------------
+(function () {
+  const el = document.getElementById('syd-time');
+  if (!el) return;
+  let fmt;
+  try {
+    fmt = new Intl.DateTimeFormat('en-AU', {
+      timeZone: 'Australia/Sydney',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false, timeZoneName: 'short'
+    });
+  } catch (e) { return; }
+  const tick = () => { el.textContent = '· ' + fmt.format(new Date()); };
+  tick();
+  setInterval(tick, 1000);
+})();
+
+// ------------------------------------------------------------------------
+// 11. Tab-title wink when the visitor switches away
+// ------------------------------------------------------------------------
+(function () {
+  const original = document.title;
+  document.addEventListener('visibilitychange', () => {
+    document.title = document.hidden ? '🧠 Model still training — come back!' : original;
+  });
 })();

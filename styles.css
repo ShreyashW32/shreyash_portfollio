@@ -2049,10 +2049,291 @@ body.custom-cursor-active input {
   .theme-swatch { width: 18px; height: 18px; }
 }
 
+/* --- 7. Visitor Lens Switch --- */
+.lens-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.lens-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-code);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-secondary);
+}
+
+.lens-label i { color: var(--accent-cyan); font-size: 0.95rem; }
+
+.lens-btn {
+  font-family: var(--font-code);
+  font-size: 0.75rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--color-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.lens-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--accent-cyan);
+}
+
+.lens-btn.active {
+  color: #030712;
+  background: var(--accent-gradient);
+  border-color: transparent;
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.3);
+}
+
+.lens-pick {
+  position: absolute;
+  top: 1rem;
+  left: 1.2rem;
+  z-index: 2;
+  font-family: var(--font-code);
+  font-size: 0.65rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 14px;
+  background: rgba(var(--accent-rgb), 0.16);
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
+  color: var(--accent-cyan);
+  backdrop-filter: blur(4px);
+}
+
+/* --- 8. Real Terminal Input --- */
+.console-input-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  border-top: 1px solid var(--card-border);
+  font-family: var(--font-code);
+  font-size: 0.85rem;
+  color: var(--accent-cyan);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.console-real-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--color-primary);
+  font-family: var(--font-code);
+  font-size: 0.85rem;
+  caret-color: var(--accent-cyan);
+}
+
+.console-real-input::placeholder {
+  color: var(--color-secondary);
+  opacity: 0.55;
+}
+
+/* --- 9. Sydney live clock --- */
+.syd-time {
+  color: var(--color-secondary);
+  font-size: 0.85em;
+}
+
 /* --- Reduced motion: disable heavy motion features --- */
 @media (prefers-reduced-motion: reduce) {
   .preloader { animation: none; }
   .console-card { animation: none; }
   .cursor-dot, .cursor-ring { display: none; }
   .project-card, .impact-card, .stat-box, .skill-category { background-image: none; }
+}
+
+/* =====================================================
+   PRINT STYLESHEET — the website IS the résumé
+   Ctrl+P renders a clean, ATS-friendly document
+   ===================================================== */
+@page { margin: 12mm; }
+
+@media print {
+  #bg-canvas, .main-header, .preloader, .cmdk-overlay, .cursor-dot, .cursor-ring,
+  .chatbot-container, .chatbot-toggle-btn, .hud-overlay, .theme-dock,
+  .console-wrapper, .hero-buttons, .lens-switch, .footer, .syd-time,
+  .live-indicator, .email-copy-icon, [data-action="print-resume"] {
+    display: none !important;
+  }
+
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  html, body {
+    background: #fff !important;
+    color: #111 !important;
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+
+  /* reveal-on-scroll elements must be fully visible on paper */
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  section { padding: 0.9rem 0 !important; }
+  .hero { min-height: auto !important; padding-top: 0.5rem !important; background-image: none !important; }
+  .hero-grid { grid-template-columns: 1fr !important; gap: 0.5rem !important; }
+  .hero-title { font-size: 22pt !important; margin: 0.2rem 0 !important; }
+  .section-title { font-size: 14pt !important; margin-bottom: 0.9rem !important; }
+
+  h1, h2, h3, h4, .stat-val, .impact-metric, .highlight {
+    color: #000 !important;
+    -webkit-text-fill-color: #000 !important;
+    background: none !important;
+  }
+
+  p, li, .stat-label, .impact-label, .impact-detail, .hero-intro,
+  .timeline-body li, .achievement-details p, .academic-subtext {
+    color: #222 !important;
+  }
+
+  .hero-tagline, .timeline-company, .education-details, .timeline-date,
+  .section-tag, .project-tech li, .skill-chip, .achievement-link, .email-text {
+    color: #333 !important;
+    background: none !important;
+    border-color: #ccc !important;
+  }
+
+  .project-card, .impact-card, .stat-box, .skill-category, .timeline-content,
+  .achievement-item, .education-card, .contact-card {
+    background: #fff !important;
+    background-image: none !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+  }
+
+  .education-card::before, .impact-card::before, .impact-narrative-card::after,
+  .timeline-body li::before { background: #888 !important; color: #555 !important; }
+  .timeline::before { background: #ccc !important; }
+  .timeline-marker { border-color: #555 !important; background: #fff !important; }
+
+  .project-media { display: none !important; }
+  a { color: #000 !important; }
+  .project-link[href^="http"]::after, .achievement-link[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 7.5pt;
+    color: #555;
+    word-break: break-all;
+  }
+
+  .stats-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 0.5rem !important; }
+  .impact-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 0.6rem !important; }
+  .projects-grid { grid-template-columns: 1fr 1fr !important; gap: 0.75rem !important; }
+  .impact-narrative-grid, .achievements-grid { gap: 0.75rem !important; }
+  .about-me, .achievements, .impact-section { background: #fff !important; }
+
+  /* compact density: keep the printout to a handful of pages */
+  html, body { line-height: 1.35 !important; }
+  .timeline-item { margin-bottom: 1rem !important; }
+  .about-grid { gap: 1rem !important; }
+  .project-content, .timeline-content, .skill-category, .impact-card,
+  .achievement-item, .education-card, .contact-card, .impact-narrative-card {
+    padding: 0.75rem !important;
+  }
+  .stat-box { padding: 0.5rem !important; }
+  .stat-val, .impact-metric { font-size: 13pt !important; margin-bottom: 0.1rem !important; }
+  .impact-label { font-size: 9pt !important; margin-bottom: 0.25rem !important; }
+  .project-desc, .impact-detail, .timeline-body li, .achievement-details p,
+  .academic-subtext { font-size: 9pt !important; margin-bottom: 0.35rem !important; }
+  .project-title, .timeline-title { font-size: 11pt !important; }
+  .project-tech { margin-bottom: 0.5rem !important; }
+  .impact-subtitle { margin: 0 0 0.75rem !important; }
+  .contact-container p { font-size: 9.5pt !important; }
+}
+
+/* =====================================================
+   RESPONSIVE OPTIMIZATION PASS — phones · tablets · iOS
+   ===================================================== */
+
+/* Fluid grids: minmax(360px) forced horizontal overflow on narrow phones */
+.projects-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+}
+.skills-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+
+/* Hamburger menu toggles this on body; it was never defined */
+.no-scroll { overflow: hidden; }
+
+/* iOS Safari: prefixed backdrop blurs */
+.main-header.scrolled, .theme-dock { -webkit-backdrop-filter: blur(12px); }
+.console-card { -webkit-backdrop-filter: blur(16px); }
+.chatbot-container, .cmdk-panel { -webkit-backdrop-filter: blur(20px); }
+.cmdk-overlay { -webkit-backdrop-filter: blur(6px); }
+.lens-pick { -webkit-backdrop-filter: blur(4px); }
+
+/* Tablet: collapse nav to hamburger BEFORE it overflows (7 links + logo
+   + socials don't fit between 768–1150px) */
+@media (max-width: 1150px) {
+  .nav-list {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: var(--bg-color-main);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    z-index: 1050;
+  }
+  .nav-list.open { display: flex; }
+  .nav-list .nav-links { font-size: 1.15rem; }
+  .hamburger { display: block; }
+  .hamburger.open .line-menu:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
+  .hamburger.open .line-menu:nth-child(2) { opacity: 0; }
+  .hamburger.open .line-menu:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
+}
+
+/* Tablets: nav is collapsed now, so there's room for the ⌘K pill again */
+@media (max-width: 992px) {
+  .cmdk-trigger { display: inline-flex; }
+  .lens-switch { justify-content: center; }
+  .hero-buttons { flex-wrap: wrap; justify-content: center; }
+  /* terminal must stay left-aligned inside the centered mobile hero */
+  .console-card { text-align: left; }
+}
+
+@media (max-width: 768px) {
+  .cmdk-trigger { display: none; }
+  /* iOS zooms the page when focusing inputs under 16px */
+  .chatbot-footer input, .console-real-input { font-size: 16px; }
+  /* bigger touch targets for the theme dock */
+  .theme-swatch { width: 24px; height: 24px; }
+  /* 2-up stat tiles read better than a single tall column */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 1.25rem; }
+  .hero-title { font-size: 2.5rem; }
+  .section-title { font-size: 1.75rem; }
+  .hero-intro { font-size: 1.02rem; }
+  .console-terminal { height: 240px; }
+  .hero-buttons .btn { padding: 0.75rem 1.4rem; font-size: 0.9rem; }
+  .timeline-content { padding: 1.4rem; }
+  .project-content { padding: 1.5rem; }
+  .contact-card { padding: 2rem 1.25rem; }
+  .impact-metric { font-size: 2.2rem; }
 }

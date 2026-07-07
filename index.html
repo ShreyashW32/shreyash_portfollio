@@ -107,7 +107,7 @@
 				<div class="hero-text">
 					<div class="hero-tagline reveal reveal-fade-up">
 						<span class="live-indicator"></span>
-						<span>AI Engineer // Sydney, AU</span>
+						<span>AI Engineer // Sydney, AU <span class="syd-time" id="syd-time"></span></span>
 					</div>
 					<h1 class="hero-title reveal reveal-fade-up delay-1">Shreyash Wetal</h1>
 					<p class="hero-intro reveal reveal-fade-up delay-2">
@@ -120,6 +120,14 @@
 						<a href="#projects" class="btn btn-secondary">
 							View Projects
 						</a>
+					</div>
+
+					<!-- Visitor Lens: the portfolio adapts to who's viewing it -->
+					<div class="lens-switch reveal reveal-fade-up delay-4" id="lens-switch" role="group" aria-label="View this portfolio as">
+						<span class="lens-label"><i class='bx bx-low-vision'></i> Viewing as</span>
+						<button class="lens-btn active" data-lens="engineer">Engineer</button>
+						<button class="lens-btn" data-lens="recruiter">Recruiter</button>
+						<button class="lens-btn" data-lens="researcher">Researcher</button>
 					</div>
 				</div>
 
@@ -140,6 +148,10 @@
 								<span class="console-input-mock">cat intro.md</span>
 							</div>
 							<div class="console-response">Initializing Shreyash AI Terminal... Click a command module below to query the resume database.</div>
+						</div>
+						<div class="console-input-line">
+							<span class="console-prompt-symbol">$</span>
+							<input type="text" id="console-input" class="console-real-input" placeholder="try: help · neofetch · sudo hire shreyash" autocomplete="off" spellcheck="false" aria-label="Terminal command input" />
 						</div>
 						<div class="console-options">
 							<p class="console-options-title">Select Module Query</p>
@@ -634,6 +646,9 @@
 					<div style="font-size: 0.85rem; color: var(--color-secondary); margin-top: 0.5rem;">
 						Phone: +61 0451507744 (Australia)
 					</div>
+					<button class="btn btn-secondary" data-action="print-resume" style="margin-top: 0.75rem;">
+						<i class='bx bx-printer'></i> Print / Save Résumé (PDF)
+					</button>
 				</div>
 			</div>
 		</section>
