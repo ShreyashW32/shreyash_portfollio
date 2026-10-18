@@ -64,7 +64,7 @@
 	<canvas id="bg-canvas"></canvas>
 
 	<!-- Skip to content for accessibility -->
-	<a class="skip-to-content" style="position: absolute; left: -10000px;" href="#main-content">Skip to content</a>
+	<a class="skip-to-content" href="#main-content">Skip to content</a>
 
 	<!-- Header / Navigation -->
 	<header class="main-header" id="navbar">
@@ -76,11 +76,11 @@
 
 			<ul class="nav-list" id="nav-list">
 				<li><a href="#about" class="nav-links">About</a></li>
-				<li><a href="#experience" class="nav-links">Experience</a></li>
-				<li><a href="#skills" class="nav-links">Skills</a></li>
 				<li><a href="#projects" class="nav-links">Projects</a></li>
+				<li><a href="#experience" class="nav-links">Experience</a></li>
 				<li><a href="#impact" class="nav-links">Impact</a></li>
 				<li><a href="#publications" class="nav-links">Publications</a></li>
+				<li><a href="#skills" class="nav-links">Skills</a></li>
 				<li><a href="#contact" class="nav-links">Contact</a></li>
 			</ul>
 
@@ -103,11 +103,11 @@
 				</li>
 			</ul>
 
-			<div class="hamburger" id="hamburger" aria-label="Toggle Menu">
-				<div class="line-menu"></div>
-				<div class="line-menu"></div>
-				<div class="line-menu"></div>
-			</div>
+			<button type="button" class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="nav-list">
+				<span class="line-menu"></span>
+				<span class="line-menu"></span>
+				<span class="line-menu"></span>
+			</button>
 		</div>
 	</header>
 
@@ -195,7 +195,7 @@
 				<div class="about-grid">
 					<div class="about-info reveal reveal-fade-up delay-1">
 						<p>
-							I am a dedicated technology professional with a solid background in designing AI-driven solutions for real-world automation, anomaly detection, and natural language processing. 
+							I build AI systems for real-world automation, anomaly detection and natural language processing, from research prototype to production API.
 						</p>
 						<p>
 							My approach is research-oriented, with published work on non-invasive biometric identification and auto-traffic control. I love designing end-to-end pipelines — from <strong>GenAI ideation workflows and RAG systems</strong> to medical-imaging models — and turning them into products people actually use.
@@ -205,12 +205,12 @@
 						<div class="education-card reveal reveal-fade-up delay-2">
 							<h3>Master of Computer Science (AI & Data Science)</h3>
 							<div class="education-details">University of Sydney | 2025 - 2027</div>
-							<p class="academic-subtext">Currently studying + AI research (medical imaging). WAM: 75.</p>
+							<p class="academic-subtext">Coursework plus AI research in medical imaging. WAM 75.</p>
 						</div>
 						<div class="education-card reveal reveal-fade-up delay-3">
 							<h3>Bachelor of Technology in Information Technology</h3>
 							<div class="education-details">Pimpri Chinchwad College of Engineering | 2020 - 2024</div>
-							<p class="academic-subtext">Graduated with a stellar CGPA: 8.57 / 10.</p>
+							<p class="academic-subtext">CGPA 8.57 / 10.</p>
 						</div>
 					</div>
 
@@ -233,6 +233,216 @@
 							<div class="stat-label">AI Tools Mastered</div>
 						</div>
 					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Projects Section -->
+		<section class="projects-section" id="projects">
+			<div class="container">
+				<span class="section-tag">Case Studies</span>
+				<h2 class="section-title reveal reveal-fade-up">Projects I've Built</h2>
+
+				<!-- Card order in DOM matters: the Visitor Lens (script.js) reorders by index -->
+				<div class="projects-grid">
+					<!-- 0 · MCP Matchmaker -->
+					<article class="project-card project-card--flagship reveal reveal-fade-up">
+						<div class="project-media">
+							<img src="./assets/mcp_matchmaker.webp" alt="MCP Matchmaker discovery view ranking tools for a natural-language query" class="project-img" width="1048" height="590" loading="lazy" decoding="async" />
+						</div>
+						<div class="project-content">
+							<span class="project-kicker">New · Agent tooling</span>
+							<h3 class="project-title">MCP Matchmaker</h3>
+							<p class="project-desc">
+								Discovery platform for Model Context Protocol servers. It merges listings from several registries, ranks tools with hybrid BM25 + vector search, runs an 8-point security scan, resolves tool dependencies into runnable toolchains and generates one-paste configs for Claude Desktop, Cursor and more.
+							</p>
+							<ul class="project-tech">
+								<li>Python</li>
+								<li>Hybrid Search</li>
+								<li>MCP</li>
+								<li>Security Scanning</li>
+								<li>81 tests</li>
+							</ul>
+							<div class="project-actions">
+								<a href="https://github.com/ShreyashW32/mcp-matchmaker" target="_blank" rel="noopener noreferrer" class="project-link">
+									Source code <i class='bx bxl-github' aria-hidden="true"></i>
+								</a>
+							</div>
+						</div>
+					</article>
+
+					<!-- 1 · AUS Backyard Intelligence -->
+					<article class="project-card project-card--flagship reveal reveal-fade-up delay-1">
+						<div class="project-media">
+							<img src="./assets/aus_backyard.webp" alt="AUS Backyard Intelligence map viewer over aerial imagery with detection layers" class="project-img" width="1200" height="675" loading="lazy" decoding="async" />
+						</div>
+						<div class="project-content">
+							<span class="project-kicker">New · Geospatial AI</span>
+							<h3 class="project-title">AUS Backyard Intelligence</h3>
+							<p class="project-desc">
+								Map platform that ranks Australian homes for pool, fence, deck and landscaping work. It combines OpenStreetMap features with YOLO pool detection on satellite imagery, state-specific compliance rules and QGIS 3D exports, and reports honest accuracy with confidence intervals.
+							</p>
+							<ul class="project-tech">
+								<li>YOLO11</li>
+								<li>GeoPandas</li>
+								<li>MapLibre</li>
+								<li>QGIS</li>
+								<li>Playwright</li>
+							</ul>
+							<div class="project-actions">
+								<a href="https://github.com/ShreyashW32/aus-backyard-intelligence" target="_blank" rel="noopener noreferrer" class="project-link">
+									Source code <i class='bx bxl-github' aria-hidden="true"></i>
+								</a>
+							</div>
+						</div>
+					</article>
+
+					<!-- 2 · GenAI Product Innovation -->
+					<article class="project-card reveal reveal-fade-up">
+						<div class="project-media">
+							<img src="./assets/product_innovation.svg" alt="AI-powered product innovation framework" class="project-img" loading="lazy" decoding="async" />
+						</div>
+						<div class="project-content">
+							<h3 class="project-title">AI Product Innovation & Consumer Insights</h3>
+							<p class="project-desc">
+								GenAI workflow using ChatGPT and Gemini to generate product concepts, consumer personas, claims and market research summaries. An idea-scoring framework rates feasibility, differentiation, evidence strength and commercial potential, with Python/Excel dashboards for decisions.
+							</p>
+							<ul class="project-tech">
+								<li>OpenAI API</li>
+								<li>Gemini</li>
+								<li>Prompt Engineering</li>
+								<li>Python</li>
+								<li>Dashboards</li>
+							</ul>
+							<div class="project-actions">
+								<a href="#contact" class="project-link">
+									Case study on request <i class='bx bx-right-arrow-alt' aria-hidden="true"></i>
+								</a>
+							</div>
+						</div>
+					</article>
+
+					<!-- 3 · EyeDentify -->
+					<article class="project-card reveal reveal-fade-up">
+						<div class="project-media">
+							<img src="./assets/eyedentify.webp" alt="EyeDentify blink biometric scan" class="project-img" width="1024" height="1024" loading="lazy" decoding="async" />
+						</div>
+						<div class="project-content">
+							<h3 class="project-title">EyeDentify: Blink Biometrics</h3>
+							<p class="project-desc">
+								Non-invasive person identification from blink patterns. Introduced the Colour Outline Time Image (COTI) and Mean Intensity Time Image (MITI) templates, reaching 99.04% accuracy with MobileNetV2. Published at AJCAI 2025.
+							</p>
+							<ul class="project-tech">
+								<li>MobileNetV2</li>
+								<li>OpenCV</li>
+								<li>TensorFlow</li>
+							</ul>
+							<div class="project-actions">
+								<a href="https://link.springer.com/chapter/10.1007/978-981-95-4972-6_16" target="_blank" rel="noopener noreferrer" class="project-link">
+									Paper <i class='bx bx-link-external' aria-hidden="true"></i>
+								</a>
+								<a href="https://github.com/ShreyashW32/eyedentify-blink-biometrics" target="_blank" rel="noopener noreferrer" class="project-link">
+									Code <i class='bx bxl-github' aria-hidden="true"></i>
+								</a>
+							</div>
+						</div>
+					</article>
+
+					<!-- 4 · UAV Surveillance -->
+					<article class="project-card reveal reveal-fade-up delay-1">
+						<div class="project-media">
+							<img src="./assets/uav_surveillance.webp" alt="Urban UAV surveillance with object detection overlays" class="project-img" width="1024" height="1024" loading="lazy" decoding="async" />
+						</div>
+						<div class="project-content">
+							<h3 class="project-title">Urban UAV Surveillance</h3>
+							<p class="project-desc">
+								Drone-based system for real-time traffic monitoring and emergency detection. YOLOv8 object detection, flights simulated in Gazebo, and ORB feature extraction with geo-tagging. Published at ICSC 2024.
+							</p>
+							<ul class="project-tech">
+								<li>YOLOv8</li>
+								<li>Gazebo</li>
+								<li>ROS</li>
+								<li>GDAL</li>
+							</ul>
+							<div class="project-actions">
+								<a href="https://link.springer.com/chapter/10.1007/978-981-96-7818-1_35" target="_blank" rel="noopener noreferrer" class="project-link">
+									Paper <i class='bx bx-link-external' aria-hidden="true"></i>
+								</a>
+							</div>
+						</div>
+					</article>
+
+					<!-- 5 · Medicinal Plants -->
+					<article class="project-card reveal reveal-fade-up delay-2">
+						<div class="project-media">
+							<img src="./assets/identification.jpg" alt="Medicinal plant identification app screens" class="project-img" loading="lazy" decoding="async" />
+						</div>
+						<div class="project-content">
+							<h3 class="project-title">Medicinal Plant Identification</h3>
+							<p class="project-desc">
+								Smart India Hackathon project for the Ministry of AYUSH. CNN, HOG and Random Forest models classify medicinal plants from leaf images, with a LangChain-powered chatbot for plant information.
+							</p>
+							<ul class="project-tech">
+								<li>CNN</li>
+								<li>Random Forest</li>
+								<li>LangChain</li>
+								<li>Firebase</li>
+							</ul>
+							<div class="project-actions">
+								<a href="https://github.com/ShreyashW32/medicinal-plant-classification" target="_blank" rel="noopener noreferrer" class="project-link">
+									Code <i class='bx bxl-github' aria-hidden="true"></i>
+								</a>
+							</div>
+						</div>
+					</article>
+
+					<!-- 6 · Crop Disease -->
+					<article class="project-card reveal reveal-fade-up delay-1">
+						<div class="project-media">
+							<img src="./assets/crop_disease.jpg" alt="Phone scanning a diseased crop leaf" class="project-img" loading="lazy" decoding="async" />
+						</div>
+						<div class="project-content">
+							<h3 class="project-title">Crop Disease Detector</h3>
+							<p class="project-desc">
+								Real-time leaf disease classifier that runs from the browser camera: 17 classes across corn, potato, rice, wheat and sugarcane, served by FastAPI with float and int8 TensorFlow Lite models.
+							</p>
+							<ul class="project-tech">
+								<li>FastAPI</li>
+								<li>TensorFlow Lite</li>
+								<li>Docker</li>
+								<li>Python</li>
+							</ul>
+							<div class="project-actions">
+								<a href="https://github.com/ShreyashW32/crop-disease-detector" target="_blank" rel="noopener noreferrer" class="project-link">
+									Code <i class='bx bxl-github' aria-hidden="true"></i>
+								</a>
+							</div>
+						</div>
+					</article>
+
+					<!-- 7 · Emotion Recognition -->
+					<article class="project-card reveal reveal-fade-up delay-2">
+						<div class="project-media">
+							<img src="./assets/Multimodel-emotion-recognition.jpg" alt="Multimodal emotion recognition feedback dashboard" class="project-img" loading="lazy" decoding="async" />
+						</div>
+						<div class="project-content">
+							<h3 class="project-title">Multimodal Emotion Recognition</h3>
+							<p class="project-desc">
+								Combines vocal pitch (audio), facial expressions (video) and text sentiment to read student emotion and give teachers feedback on virtual classes.
+							</p>
+							<ul class="project-tech">
+								<li>CNN-LSTM</li>
+								<li>Keras</li>
+								<li>NLTK</li>
+								<li>Flask</li>
+							</ul>
+							<div class="project-actions">
+								<a href="https://github.com/ShreyashW32/multimodal-emotion-recognition" target="_blank" rel="noopener noreferrer" class="project-link">
+									Code <i class='bx bxl-github' aria-hidden="true"></i>
+								</a>
+							</div>
+						</div>
+					</article>
 				</div>
 			</div>
 		</section>
@@ -392,244 +602,6 @@
 			</div>
 		</section>
 
-		<!-- Skills Section -->
-		<section class="skills-section" id="skills">
-			<div class="container">
-				<span class="section-tag">Stack</span>
-				<h2 class="section-title reveal reveal-fade-up">Technical Expertise</h2>
-				
-				<div class="skills-grid">
-					<!-- GenAI & LLMs -->
-					<div class="skill-category reveal reveal-zoom-in delay-1">
-						<h3><i class='bx bx-bot'></i> GenAI & LLMs</h3>
-						<div class="skill-chips">
-							<span class="skill-chip">OpenAI API</span>
-							<span class="skill-chip">RAG Pipelines</span>
-							<span class="skill-chip">Prompt Engineering</span>
-							<span class="skill-chip">Embeddings</span>
-							<span class="skill-chip">Vector Databases</span>
-							<span class="skill-chip">LLM Evaluation</span>
-							<span class="skill-chip">Transformers</span>
-						</div>
-					</div>
-
-					<!-- Languages -->
-					<div class="skill-category reveal reveal-zoom-in delay-2">
-						<h3><i class='bx bx-code'></i> Languages</h3>
-						<div class="skill-chips">
-							<span class="skill-chip">Python</span>
-							<span class="skill-chip">C/C++</span>
-							<span class="skill-chip">SQL</span>
-							<span class="skill-chip">HTML & CSS</span>
-						</div>
-					</div>
-
-					<!-- Frameworks -->
-					<div class="skill-category reveal reveal-zoom-in delay-2">
-						<h3><i class='bx bx-brain'></i> AI & Data Libraries</h3>
-						<div class="skill-chips">
-							<span class="skill-chip">TensorFlow</span>
-							<span class="skill-chip">OpenCV</span>
-							<span class="skill-chip">LangChain</span>
-							<span class="skill-chip">Scikit-Learn</span>
-							<span class="skill-chip">NLTK</span>
-							<span class="skill-chip">Pandas</span>
-							<span class="skill-chip">Gensim</span>
-						</div>
-					</div>
-
-					<!-- Tools / Platforms -->
-					<div class="skill-category reveal reveal-zoom-in delay-3">
-						<h3><i class='bx bx-terminal'></i> Tools & Platforms</h3>
-						<div class="skill-chips">
-							<span class="skill-chip">ROS</span>
-							<span class="skill-chip">Gazebo</span>
-							<span class="skill-chip">YOLOv8</span>
-							<span class="skill-chip">Flask & Django</span>
-							<span class="skill-chip">GCP</span>
-							<span class="skill-chip">Firebase</span>
-							<span class="skill-chip">REST APIs</span>
-							<span class="skill-chip">CI/CD</span>
-							<span class="skill-chip">Excel Dashboards</span>
-							<span class="skill-chip">Git/GitHub</span>
-						</div>
-					</div>
-
-					<!-- Certifications -->
-					<div class="skill-category reveal reveal-zoom-in delay-4">
-						<h3><i class='bx bx-certification'></i> Certifications</h3>
-						<ul class="timeline-body" style="margin-top: 0.5rem; list-style: none;">
-							<li style="margin-bottom: 0.5rem; line-height: 1.4;"><strong>TensorFlow Developer</strong> Professional Certificate</li>
-							<li style="margin-bottom: 0.5rem; line-height: 1.4;"><strong>Deep Learning</strong> Specialization</li>
-							<li style="margin-bottom: 0.5rem; line-height: 1.4;"><strong>LangChain</strong> Application Development</li>
-							<li style="margin-bottom: 0.5rem; line-height: 1.4;"><strong>Object Detection Web Apps</strong> (TensorFlow/OpenCV)</li>
-							<li style="margin-bottom: 0.5rem; line-height: 1.4;"><strong>Quant Modelling</strong> (JP Morgan / Forage)</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-		</section>
-
-		<!-- Projects Section -->
-		<section class="projects-section" id="projects">
-			<div class="container">
-				<span class="section-tag">Case Studies</span>
-				<h2 class="section-title reveal reveal-fade-up">Projects I've Built</h2>
-				
-				<div class="projects-grid">
-					<!-- GenAI Product Innovation -->
-					<div class="project-card reveal reveal-fade-up">
-						<div class="project-media">
-							<img src="./assets/product_innovation.svg" alt="AI-Powered Product Innovation Framework" class="project-img" />
-							<span class="project-num">00</span>
-						</div>
-						<div class="project-content">
-							<h3 class="project-title">AI Product Innovation & Consumer Insights</h3>
-							<p class="project-desc">
-								GenAI workflow using ChatGPT/Gemini to generate product concepts, consumer personas, claims, and market research summaries — with an idea-scoring framework rating feasibility, differentiation, evidence strength, and commercial potential, plus Python/Excel dashboards for decision-making.
-							</p>
-							<ul class="project-tech">
-								<li>OpenAI API</li>
-								<li>Gemini</li>
-								<li>Prompt Engineering</li>
-								<li>Python</li>
-								<li>Dashboards</li>
-							</ul>
-							<div class="project-actions">
-								<a href="#contact" class="project-link">
-									Case Study on Request <i class='bx bx-right-arrow-alt'></i>
-								</a>
-							</div>
-						</div>
-					</div>
-
-					<!-- EyeDentify -->
-					<div class="project-card reveal reveal-fade-up">
-						<div class="project-media">
-							<img src="./assets/eyedentify.png" alt="EyeDentify Scan" class="project-img" />
-							<span class="project-num">01</span>
-						</div>
-						<div class="project-content">
-							<h3 class="project-title">EyeDentify: Blink Biometric</h3>
-							<p class="project-desc">
-								A non-invasive biometric identification model using blink spatio-temporal patterns. Introduced Colour Outline Time Image (COTI) and Mean Intensity Time Image (MITI) templates, achieving 99.04% accuracy using MobileNetV2.
-							</p>
-							<ul class="project-tech">
-								<li>MobileNetV2</li>
-								<li>OpenCV</li>
-								<li>Tensorflow</li>
-							</ul>
-							<div class="project-actions">
-								<a href="https://link.springer.com/chapter/10.1007/978-981-95-4972-6_16" target="_blank" rel="noopener noreferrer" class="project-link">
-									Paper Link <i class='bx bx-link-external'></i>
-								</a>
-							</div>
-						</div>
-					</div>
-
-					<!-- UAV Surveillance -->
-					<div class="project-card reveal reveal-fade-up delay-1">
-						<div class="project-media">
-							<img src="./assets/uav_surveillance.png" alt="UAV Surveillance" class="project-img" />
-							<span class="project-num">02</span>
-						</div>
-						<div class="project-content">
-							<h3 class="project-title">Urban UAV Surveillance</h3>
-							<p class="project-desc">
-								AI-powered drone-based surveillance system for real-time traffic monitoring and emergency detection. Implemented YOLOv8 object detection, simulated flights in Gazebo, and applied ORB feature extraction with geo-tagging.
-							</p>
-							<ul class="project-tech">
-								<li>YOLOv8</li>
-								<li>Gazebo</li>
-								<li>ROS</li>
-								<li>GDAL</li>
-							</ul>
-							<div class="project-actions">
-								<a href="https://link.springer.com/chapter/10.1007/978-981-96-7818-1_35" target="_blank" rel="noopener noreferrer" class="project-link">
-									Paper Link <i class='bx bx-link-external'></i>
-								</a>
-							</div>
-						</div>
-					</div>
-
-					<!-- Medicinal Plants -->
-					<div class="project-card reveal reveal-fade-up delay-2">
-						<div class="project-media">
-							<img src="./assets/identification.jpg" alt="Medicinal Plants" class="project-img" />
-							<span class="project-num">03</span>
-						</div>
-						<div class="project-content">
-							<h3 class="project-title">Medicinal Plant Identification</h3>
-							<p class="project-desc">
-								Smart India Hackathon project for the Ayush Ministry. Employed CNN, HOG, and Random Forest models to rapidly classify medicinal plants, alongside a supportive LangChain-powered conversational bot.
-							</p>
-							<ul class="project-tech">
-								<li>CNN</li>
-								<li>Random Forest</li>
-								<li>LangChain</li>
-								<li>Firebase</li>
-							</ul>
-							<div class="project-actions">
-								<a href="https://github.com/ShreyashW32/Medicinal-Plant-Classification" target="_blank" rel="noopener noreferrer" class="project-link">
-									GitHub <i class='bx bx-right-arrow-alt'></i>
-								</a>
-							</div>
-						</div>
-					</div>
-
-					<!-- Crop Disease -->
-					<div class="project-card reveal reveal-fade-up delay-1">
-						<div class="project-media">
-							<img src="./assets/crop_disease.jpg" alt="Crop Leaf Disease Detection" class="project-img" />
-							<span class="project-num">04</span>
-						</div>
-						<div class="project-content">
-							<h3 class="project-title">Crop Leaf Disease Detection</h3>
-							<p class="project-desc">
-								Developed a CNN-based classifier integrated with a Random Forest model, detecting crop leaf diseases from a large HOG-featured preprocessed dataset with over 90% accuracy.
-							</p>
-							<ul class="project-tech">
-								<li>CNN</li>
-								<li>Random Forest</li>
-								<li>HOG</li>
-								<li>Python</li>
-							</ul>
-							<div class="project-actions">
-								<a href="https://github.com/ShreyashW32/plantleafdiseasedetection" target="_blank" rel="noopener noreferrer" class="project-link">
-									GitHub <i class='bx bx-right-arrow-alt'></i>
-								</a>
-							</div>
-						</div>
-					</div>
-
-					<!-- Emotion Recognition -->
-					<div class="project-card reveal reveal-fade-up delay-2">
-						<div class="project-media">
-							<img src="./assets/Multimodel-emotion-recognition.jpg" alt="Multi-Modal Emotion Recognition" class="project-img" />
-							<span class="project-num">05</span>
-						</div>
-						<div class="project-content">
-							<h3 class="project-title">Multi-Modal Emotion Recognition</h3>
-							<p class="project-desc">
-								Combined vocal pitch (audio), facial expressions (image), and text sentiment inputs to create a comprehensive, robust emotion detection system for human-computer interaction.
-							</p>
-							<ul class="project-tech">
-								<li>CNN</li>
-								<li>Random Forest</li>
-								<li>NLTK</li>
-								<li>Audio Processing</li>
-							</ul>
-							<div class="project-actions">
-								<a href="https://github.com/ShreyashW32/Multimodel-emotion-recognition" target="_blank" rel="noopener noreferrer" class="project-link">
-									GitHub <i class='bx bx-right-arrow-alt'></i>
-								</a>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</section>
-
 		<!-- Publications & Achievements Section -->
 		<section class="achievements" id="publications">
 			<div class="container">
@@ -709,6 +681,84 @@
 			</div>
 		</section>
 
+		<!-- Skills Section -->
+		<section class="skills-section" id="skills">
+			<div class="container">
+				<span class="section-tag">Stack</span>
+				<h2 class="section-title reveal reveal-fade-up">Technical Expertise</h2>
+				
+				<div class="skills-grid">
+					<!-- GenAI & LLMs -->
+					<div class="skill-category reveal reveal-zoom-in delay-1">
+						<h3><i class='bx bx-bot'></i> GenAI & LLMs</h3>
+						<div class="skill-chips">
+							<span class="skill-chip">OpenAI API</span>
+							<span class="skill-chip">RAG Pipelines</span>
+							<span class="skill-chip">Prompt Engineering</span>
+							<span class="skill-chip">Embeddings</span>
+							<span class="skill-chip">Vector Databases</span>
+							<span class="skill-chip">LLM Evaluation</span>
+							<span class="skill-chip">Transformers</span>
+						</div>
+					</div>
+
+					<!-- Languages -->
+					<div class="skill-category reveal reveal-zoom-in delay-2">
+						<h3><i class='bx bx-code'></i> Languages</h3>
+						<div class="skill-chips">
+							<span class="skill-chip">Python</span>
+							<span class="skill-chip">C/C++</span>
+							<span class="skill-chip">SQL</span>
+							<span class="skill-chip">HTML & CSS</span>
+						</div>
+					</div>
+
+					<!-- Frameworks -->
+					<div class="skill-category reveal reveal-zoom-in delay-2">
+						<h3><i class='bx bx-brain'></i> AI & Data Libraries</h3>
+						<div class="skill-chips">
+							<span class="skill-chip">TensorFlow</span>
+							<span class="skill-chip">OpenCV</span>
+							<span class="skill-chip">LangChain</span>
+							<span class="skill-chip">Scikit-Learn</span>
+							<span class="skill-chip">NLTK</span>
+							<span class="skill-chip">Pandas</span>
+							<span class="skill-chip">Gensim</span>
+						</div>
+					</div>
+
+					<!-- Tools / Platforms -->
+					<div class="skill-category reveal reveal-zoom-in delay-3">
+						<h3><i class='bx bx-terminal'></i> Tools & Platforms</h3>
+						<div class="skill-chips">
+							<span class="skill-chip">ROS</span>
+							<span class="skill-chip">Gazebo</span>
+							<span class="skill-chip">YOLOv8</span>
+							<span class="skill-chip">Flask & Django</span>
+							<span class="skill-chip">GCP</span>
+							<span class="skill-chip">Firebase</span>
+							<span class="skill-chip">REST APIs</span>
+							<span class="skill-chip">CI/CD</span>
+							<span class="skill-chip">Excel Dashboards</span>
+							<span class="skill-chip">Git/GitHub</span>
+						</div>
+					</div>
+
+					<!-- Certifications -->
+					<div class="skill-category reveal reveal-zoom-in delay-4">
+						<h3><i class='bx bx-certification'></i> Certifications</h3>
+						<ul class="timeline-body" style="margin-top: 0.5rem; list-style: none;">
+							<li style="margin-bottom: 0.5rem; line-height: 1.4;"><strong>TensorFlow Developer</strong> Professional Certificate</li>
+							<li style="margin-bottom: 0.5rem; line-height: 1.4;"><strong>Deep Learning</strong> Specialization</li>
+							<li style="margin-bottom: 0.5rem; line-height: 1.4;"><strong>LangChain</strong> Application Development</li>
+							<li style="margin-bottom: 0.5rem; line-height: 1.4;"><strong>Object Detection Web Apps</strong> (TensorFlow/OpenCV)</li>
+							<li style="margin-bottom: 0.5rem; line-height: 1.4;"><strong>Quant Modelling</strong> (JP Morgan / Forage)</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</section>
+
 		<!-- Contact Section -->
 		<section class="contact" id="contact">
 			<div class="container contact-container">
@@ -719,12 +769,12 @@
 				</p>
 				
 				<div class="contact-card reveal reveal-zoom-in delay-2">
-					<p>Click below to copy my direct email to your clipboard:</p>
-					<div class="email-box" id="email-box" data-email="shreyash.wetal03@gmail.com">
-						<i class='bx bx-envelope' style="font-size: 1.25rem; color: var(--accent-cyan);"></i>
-						<span class="email-text" id="email-text">shreyash.wetal03@gmail.com</span>
-						<i class='bx bx-copy email-copy-icon' id="copy-icon"></i>
-					</div>
+					<p>Click to copy my email address:</p>
+					<button type="button" class="email-box" id="email-box" data-email="shreyash.wetal03@gmail.com" aria-label="Copy email address shreyash.wetal03@gmail.com">
+						<i class='bx bx-envelope' style="font-size: 1.25rem; color: var(--accent-cyan);" aria-hidden="true"></i>
+						<span class="email-text" id="email-text" aria-live="polite">shreyash.wetal03@gmail.com</span>
+						<i class='bx bx-copy email-copy-icon' id="copy-icon" aria-hidden="true"></i>
+					</button>
 					<div style="font-size: 0.85rem; color: var(--color-secondary); margin-top: 0.5rem;">
 						Phone: +61 0451507744 (Australia)
 					</div>
@@ -742,7 +792,7 @@
 	<!-- Footer -->
 	<footer class="footer">
 		<div class="container footer-content">
-			<p>&copy; <span id="date"></span> Shreyash Wetal. Built with modern interactive design.</p>
+			<p>&copy; <span id="date"></span> Shreyash Wetal. Designed and built by hand, no frameworks.</p>
 			
 			<ul class="footer-links">
 				<li><a href="https://github.com/ShreyashW32" target="_blank" rel="noopener noreferrer">GitHub</a></li>
@@ -762,7 +812,7 @@
 				<span class="live-indicator" style="width: 8px; height: 8px; margin-right: 0.25rem;"></span>
 				<span>Shreyash-AI Assistant</span>
 			</div>
-			<button class="chatbot-close-btn" id="chatbot-close-btn">&times;</button>
+			<button type="button" class="chatbot-close-btn" id="chatbot-close-btn" aria-label="Close chat">&times;</button>
 		</div>
 		<div class="chatbot-messages" id="chatbot-messages">
 			<div class="chat-message bot-message">
@@ -776,8 +826,8 @@
 			<button class="suggestion-chip" data-question="contact">How can I contact Shreyash?</button>
 		</div>
 		<div class="chatbot-footer">
-			<input type="text" id="chatbot-input" placeholder="Type a message..." autocomplete="off" />
-			<button id="chatbot-send-btn"><i class='bx bx-send'></i></button>
+			<input type="text" id="chatbot-input" placeholder="Type a message..." autocomplete="off" aria-label="Message the assistant" />
+			<button type="button" id="chatbot-send-btn" aria-label="Send message"><i class='bx bx-send' aria-hidden="true"></i></button>
 		</div>
 	</div>
 
@@ -785,27 +835,6 @@
 	<button class="chatbot-toggle-btn" id="chatbot-toggle-btn" aria-label="Open Chat Assistant">
 		<i class='bx bx-bot chatbot-icon-open'></i>
 	</button>
-
-	<!-- Ambient HUD Overlay -->
-	<div class="hud-overlay" id="hud-overlay">
-		<div class="hud-scroll-indicator">
-			<svg class="hud-progress-ring" width="42" height="42">
-				<circle cx="21" cy="21" r="18" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"></circle>
-				<circle id="hud-progress-circle" cx="21" cy="21" r="18" fill="none" stroke="var(--accent-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="113.1" stroke-dashoffset="113.1" style="transition: stroke-dashoffset 0.25s ease; transform: rotate(-90deg); transform-origin: center;"></circle>
-			</svg>
-			<span class="hud-scroll-pct" id="hud-scroll-pct">0%</span>
-		</div>
-		<div class="hud-coords">
-			<div class="hud-coord-row">
-				<span class="hud-coord-label">X</span>
-				<span class="hud-coord-val" id="hud-x">0.0000</span>
-			</div>
-			<div class="hud-coord-row">
-				<span class="hud-coord-label">Y</span>
-				<span class="hud-coord-val" id="hud-y">0.0000</span>
-			</div>
-		</div>
-	</div>
 
 	<!-- Theme Switcher Dock -->
 	<div class="theme-dock" id="theme-dock" role="group" aria-label="Color theme">
@@ -821,7 +850,7 @@
 		<div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="Command palette">
 			<div class="cmdk-search">
 				<i class='bx bx-search'></i>
-				<input type="text" id="cmdk-input" placeholder="Jump to a section or run a command…" autocomplete="off" spellcheck="false" />
+				<input type="text" id="cmdk-input" placeholder="Jump to a section or run a command…" autocomplete="off" spellcheck="false" aria-label="Search sections and commands" />
 				<span class="cmdk-esc">ESC</span>
 			</div>
 			<ul class="cmdk-list" id="cmdk-list"></ul>

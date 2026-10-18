@@ -314,9 +314,11 @@ const navList = document.getElementById('nav-list');
 const navLinks = document.querySelectorAll('.nav-links');
 
 const toggleMenu = () => {
-  hamburger.classList.toggle('open');
-  navList.classList.toggle('open');
-  document.body.classList.toggle('no-scroll');
+  const open = navList.classList.toggle('open');
+  hamburger.classList.toggle('open', open);
+  hamburger.setAttribute('aria-expanded', String(open));
+  hamburger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  document.body.classList.toggle('no-scroll', open);
 };
 
 if (hamburger && navList) {
@@ -620,8 +622,22 @@ const CHAT_KB = [
     id: 'projects', label: 'Projects',
     words: ['project', 'projects', 'built', 'build', 'portfolio', 'made', 'showcase'],
     phrases: ['case study', 'case studies', 'what has he built'],
-    answer: "Shreyash's 6 flagship projects:\n1. AI Product Innovation & Consumer Insights — GenAI ideation + idea-scoring framework\n2. EyeDentify — 99.04% blink biometrics (AJCAI 2025)\n3. Urban UAV Surveillance — YOLOv8 drone monitoring (ICSC 2024)\n4. Medicinal Plant ID — SIH project for the Ayush Ministry\n5. Crop Disease Detection — 90%+ CNN pathology classifier\n6. Multi-Modal Emotion Recognition — audio + face + text",
-    follow: ['EyeDentify', 'UAV surveillance', 'AI Product Innovation project']
+    answer: "Shreyash's projects:\n1. MCP Matchmaker — discovery platform for MCP servers: hybrid search, security scan, toolchain composition\n2. AUS Backyard Intelligence — geospatial platform with YOLO pool detection on satellite imagery\n3. EyeDentify — 99.04% blink biometrics (AJCAI 2025)\n4. Urban UAV Surveillance — YOLOv8 drone monitoring (ICSC 2024)\n5. AI Product Innovation & Consumer Insights — GenAI ideation + idea-scoring framework\n6. Crop Disease Detector — real-time 17-class TFLite classifier\n7. Medicinal Plant ID — SIH project for the Ayush Ministry\n8. Multimodal Emotion Recognition — audio + face + text",
+    follow: ['MCP Matchmaker', 'Backyard Intelligence', 'EyeDentify']
+  },
+  {
+    id: 'mcp', label: 'MCP Matchmaker',
+    words: ['mcp', 'matchmaker', 'matchmaking', 'model context protocol', 'toolchain', 'toolchains', 'registry', 'registries', 'agent', 'agents', 'bm25'],
+    phrases: ['model context protocol', 'mcp server', 'mcp servers'],
+    answer: "MCP Matchmaker is a discovery platform for Model Context Protocol servers. It aggregates listings from several registries, ranks individual tools with hybrid BM25 + vector search, runs an 8-point security scan (trust badges: verified / caution / blocked), resolves inter-tool dependencies into ordered toolchains, and generates one-paste configs for Claude Desktop, Cursor and other clients. Pure Python standard library, 81 tests: https://github.com/ShreyashW32/mcp-matchmaker",
+    follow: ['Backyard Intelligence', 'His projects', 'GenAI experience']
+  },
+  {
+    id: 'backyard', label: 'Backyard Intelligence',
+    words: ['backyard', 'pool', 'pools', 'satellite', 'geospatial', 'gis', 'qgis', 'maplibre', 'osm', 'openstreetmap', 'property', 'properties'],
+    phrases: ['aus backyard', 'backyard intelligence', 'pool detection'],
+    answer: "AUS Backyard Intelligence ranks Australian residential properties for pool, fence, deck and landscaping work. It fuses OpenStreetMap features with YOLO pool detection on satellite imagery (selection-scoped, colour-confirmed and de-duplicated against OSM), applies state-specific pool-compliance rules, exports to QGIS for 3D, and reports accuracy honestly with Wilson confidence intervals. https://github.com/ShreyashW32/aus-backyard-intelligence",
+    follow: ['MCP Matchmaker', 'UAV surveillance', 'His projects']
   },
   {
     id: 'eyedentify', label: 'EyeDentify',
@@ -953,11 +969,15 @@ const FINE_POINTER =
     setTimeout(() => preloader.remove(), 800);
   };
 
-  // Reduced motion or no terminal → skip the show
-  if (REDUCED_MOTION || !terminal || !barFill) {
-    dismiss();
+  // Reduced motion, no terminal, or already seen this session → skip the show.
+  // Deferred so the hero listeners for 'portfolio:ready' are registered first.
+  let seen = false;
+  try { seen = sessionStorage.getItem('portfolio-booted') === '1'; } catch (e) {}
+  if (REDUCED_MOTION || seen || !terminal || !barFill) {
+    setTimeout(dismiss, 0);
     return;
   }
+  try { sessionStorage.setItem('portfolio-booted', '1'); } catch (e) {}
 
   document.body.style.overflow = 'hidden';
 
@@ -973,7 +993,7 @@ const FINE_POINTER =
     if (dismissed) return;
     if (li >= lines.length) {
       barFill.style.width = '100%';
-      setTimeout(dismiss, 420);
+      setTimeout(dismiss, 300);
       return;
     }
     const line = document.createElement('div');
@@ -984,7 +1004,7 @@ const FINE_POINTER =
     terminal.appendChild(line);
     li++;
     barFill.style.width = Math.round((li / lines.length) * 100) + '%';
-    setTimeout(renderLine, 360);
+    setTimeout(renderLine, 240);
   };
   renderLine();
 
@@ -1554,7 +1574,8 @@ Tip: type 'resume' for a printable CV.`;
   const cards = Array.prototype.slice.call(
     document.querySelectorAll('.projects-grid .project-card')
   );
-  // card order in DOM: 0 GenAI Innovation · 1 EyeDentify · 2 UAV · 3 Plants · 4 Crop · 5 Emotion
+  // card order in DOM: 0 MCP Matchmaker · 1 Backyard Intelligence · 2 GenAI Innovation ·
+  // 3 EyeDentify · 4 UAV · 5 Plants · 6 Crop · 7 Emotion
 
   const CV_PDF = './assets/Shreyash_Wetal_CV.pdf';
 
@@ -1563,21 +1584,21 @@ Tip: type 'resume' for a printable CV.`;
       intro: 'I design and ship AI systems end-to-end — <span class="highlight">LLM & RAG pipelines</span>, real-time <span class="highlight">computer vision</span>, and the production infrastructure that keeps them fast and reliable. Master\'s @ University of Sydney.',
       primary: { label: 'View Projects', href: '#projects' },
       secondary: { label: 'GitHub', href: 'https://github.com/ShreyashW32', blank: true },
-      order: [2, 3, 4, 5, 0, 1],
+      order: [0, 1, 4, 3, 6, 7, 5, 2],
       pick: '★ top pick · engineers'
     },
     recruiter: {
       intro: 'AI Engineer with <span class="highlight">NVIDIA experience</span>, 3 published papers, and a record of shipping <span class="highlight">production ML</span> — currently an AI researcher completing a Master\'s at the University of Sydney.',
       primary: { label: 'Download Résumé', href: CV_PDF, blank: true },
       secondary: { label: 'Get In Touch', href: '#contact' },
-      order: [1, 0, 3, 2, 4, 5],
+      order: [0, 1, 3, 2, 4, 6, 5, 7],
       pick: '★ top pick · recruiters'
     },
     researcher: {
       intro: 'My research spans <span class="highlight">medical image analysis</span>, non-invasive biometrics, and aerial vision — 3 peer-reviewed publications including <span class="highlight">AJCAI 2025 (Springer)</span>, introducing novel COTI & MITI spatio-temporal templates.',
       primary: { label: 'Read Publications', href: '#publications' },
       secondary: { label: 'EyeDentify Paper', href: 'https://link.springer.com/chapter/10.1007/978-981-95-4972-6_16', blank: true },
-      order: [1, 2, 5, 4, 3, 0],
+      order: [3, 4, 1, 0, 7, 6, 5, 2],
       pick: '★ top pick · researchers'
     }
   };

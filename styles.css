@@ -2487,3 +2487,96 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   .impact-card .impact-bar span { width: var(--pct, 0%); }
   .btn-primary:hover::before { animation: none; }
 }
+
+/* =====================================================
+   REFINEMENT PASS — hierarchy, calmer chrome, a11y
+   ===================================================== */
+
+/* Skip link: hidden until keyboard focus */
+.skip-to-content {
+  position: fixed;
+  top: -100px;
+  left: 1rem;
+  z-index: 2000;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  background: var(--accent-cyan);
+  color: var(--bg-color-main);
+  font-weight: 700;
+  transition: top 0.15s ease;
+}
+.skip-to-content:focus { top: 1rem; }
+
+/* One visible focus ring for every interactive element */
+:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Hamburger is now a real <button> */
+.hamburger {
+  background: none;
+  border: 0;
+  padding: 0.35rem;
+  color: inherit;
+}
+.hamburger .line-menu { display: block; }
+
+/* Copy-email is now a real <button> */
+.email-box {
+  font: inherit;
+  color: inherit;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Stats sit level with the About copy instead of floating mid-column */
+.about-grid { align-items: start; }
+.stats-grid { margin-top: 0.5rem; }
+
+/* Skill cards size to their content: no tall empty boxes */
+.skills-grid { align-items: start; }
+
+/* Flagship projects: taller product screenshots, top-anchored */
+.project-card--flagship .project-media { height: 240px; }
+.project-card--flagship .project-img { object-position: top left; }
+.project-kicker {
+  display: inline-block;
+  margin-bottom: 0.6rem;
+  font-family: var(--font-code);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+}
+.project-actions { flex-wrap: wrap; }
+
+/* "Top pick" badge sits bottom-left so it never covers a screenshot's title */
+.lens-pick { top: auto; bottom: 0.9rem; }
+
+/* Theme dock: a single palette icon in the bottom-left corner that expands
+   on hover or keyboard focus, so it never sits on top of content */
+.theme-dock {
+  left: 1.5rem;
+  transform: none;
+  gap: 0;
+}
+.theme-dock .theme-swatch {
+  width: 0;
+  opacity: 0;
+  margin-left: 0;
+  border-width: 0;
+  transition: width 0.2s ease, opacity 0.2s ease, margin 0.2s ease, transform 0.15s ease;
+}
+.theme-dock:hover .theme-swatch,
+.theme-dock:focus-within .theme-swatch {
+  width: 20px;
+  opacity: 1;
+  margin-left: 0.55rem;
+  border-width: 2px;
+}
+@media (max-width: 768px) {
+  .theme-dock { display: none; }
+}
+.theme-dock:not(:hover):not(:focus-within) .theme-swatch { box-shadow: none; }
