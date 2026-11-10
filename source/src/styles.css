@@ -1,0 +1,116 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-signal: var(--signal);
+}
+
+:root {
+  --radius: 0.5rem;
+  --background: oklch(0.13 0.005 260);
+  --foreground: oklch(0.96 0.005 90);
+  --card: oklch(0.17 0.006 260);
+  --card-foreground: oklch(0.96 0.005 90);
+  --popover: oklch(0.17 0.006 260);
+  --popover-foreground: oklch(0.96 0.005 90);
+  --primary: oklch(0.72 0.19 45);
+  --primary-foreground: oklch(0.13 0.005 260);
+  --secondary: oklch(0.22 0.008 260);
+  --secondary-foreground: oklch(0.96 0.005 90);
+  --muted: oklch(0.2 0.006 260);
+  --muted-foreground: oklch(0.65 0.01 260);
+  --accent: oklch(0.22 0.008 260);
+  --accent-foreground: oklch(0.96 0.005 90);
+  --destructive: oklch(0.6 0.22 27);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.72 0.19 45);
+  --signal: oklch(0.8 0.18 150);
+  --glow: radial-gradient(60% 60% at 70% 40%, color-mix(in oklab, var(--primary) 28%, transparent), transparent 70%);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html { scroll-behavior: smooth; }
+  body { background-color: var(--color-background); color: var(--color-foreground); font-family: var(--font-sans); }
+  ::selection { background: var(--primary); color: var(--primary-foreground); }
+}
+
+@utility grid-bg {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+@utility hero-glow { background: var(--glow); }
+@utility label-mono {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+@utility pulse-dot {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+@keyframes pulse-dot { 0%,100% { opacity: 1 } 50% { opacity: .3 } }
+
+:root { --shadow-glow: 0 20px 60px -20px color-mix(in oklab, var(--primary) 45%, transparent); }
+@utility shadow-glow { box-shadow: var(--shadow-glow); }
+@utility animate-marquee { animation: marquee 40s linear infinite; }
+@utility animate-float { animation: float 6s ease-in-out infinite; }
+@utility animate-glow { animation: glow 8s ease-in-out infinite; }
+@utility animate-rise { animation: rise 1s cubic-bezier(.2,.7,.2,1) both; }
+@utility caret { border-right: 2px solid currentColor; animation: blink 1s step-end infinite; }
+@utility scan-line {
+  &::after {
+    content: ""; position: absolute; inset-inline: 0; height: 30%; pointer-events: none;
+    background: linear-gradient(to bottom, transparent, color-mix(in oklab, var(--primary) 18%, transparent), transparent);
+    animation: scan 4s linear infinite;
+  }
+}
+@utility reveal { opacity: 0; transform: translateY(32px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1); }
+@utility reveal-in { opacity: 1; transform: none; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-12px) } }
+@keyframes glow { 0%,100% { opacity: .7; transform: scale(1) } 50% { opacity: 1; transform: scale(1.1) } }
+@keyframes rise { from { opacity: 0; transform: translateY(40px); filter: blur(8px) } to { opacity: 1; transform: none; filter: none } }
+@keyframes blink { 50% { border-color: transparent } }
+@keyframes scan { from { top: -30% } to { top: 100% } }
+@media (prefers-reduced-motion: reduce) { *, *::after { animation: none !important; transition: none !important; } }
+
+html[data-swarm] [data-build] { clip-path: inset(0 0 100% 0); opacity: 0; transition: clip-path .7s cubic-bezier(.2,.7,.2,1), opacity .4s ease; }
+html[data-swarm] [data-build][data-built] { clip-path: inset(0 0 -20% 0); opacity: 1; }
+@utility depth-1 { transform: translate3d(calc(var(--mx, 0) * 10px), calc(var(--my, 0) * 10px), 0); transition: transform .3s ease-out; }
+@utility depth-2 { transform: translate3d(calc(var(--mx, 0) * -22px), calc(var(--my, 0) * -16px), 0); transition: transform .3s ease-out; }
+@utility animate-pop { animation: pop .3s cubic-bezier(.2,.7,.2,1.4) both; }
+@keyframes pop { from { opacity: 0; transform: translate(-50%, 10px) scale(.9) } to { opacity: 1; transform: translate(-50%, 0) } }
