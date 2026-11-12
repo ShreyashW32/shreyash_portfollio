@@ -57,7 +57,7 @@ export function Particles() {
         if (p.x < -20) p.x = w + 20; if (p.x > w + 20) p.x = -20;
         if (p.y < -20) p.y = h + 20; if (p.y > h + 20) p.y = -20;
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a);
-        ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-6, -6); ctx.lineTo(-3, 0); ctx.lineTo(-6, 6); ctx.closePath();
+        ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(-4, -4); ctx.lineTo(-2, 0); ctx.lineTo(-4, 4); ctx.closePath();
         ctx.fillStyle = p.col ?? "white"; ctx.globalAlpha = 0.75; ctx.fill(); ctx.restore();
       }
       raf = requestAnimationFrame(tick);

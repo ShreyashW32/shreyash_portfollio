@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 const NAMES = ["Fei-Fei", "Yann", "Geoff", "Andrew", "Ilya", "Demis", "Daphne", "Judea", "Cynthia", "Yoshua", "Ian", "Oriol", "Pieter", "Chelsea"];
 const COLORS = ["#FF7A1A", "#22C55E", "#38BDF8", "#A78BFA", "#F472B6", "#FACC15", "#FB7185", "#2DD4BF"];
 const RULER = 20;
-const INTRO_MS = 1800;
+const CURSOR_SCALE = 0.65;
 
 type Rect = { x: number; y: number; w: number; h: number };
 type Phase = "idle" | "travel" | "draw" | "hold";
@@ -41,15 +41,16 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 function drawCursor(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, name: string) {
   ctx.save();
   ctx.translate(x, y);
+  ctx.scale(CURSOR_SCALE, CURSOR_SCALE);
   ctx.beginPath();
   ctx.moveTo(0, 0); ctx.lineTo(0, 17); ctx.lineTo(4.6, 12.8); ctx.lineTo(11.6, 12.4); ctx.closePath();
   ctx.fillStyle = color; ctx.fill();
   ctx.lineWidth = 1.3; ctx.strokeStyle = "#fff"; ctx.stroke();
   ctx.font = "600 11px 'Plus Jakarta Sans', system-ui, sans-serif";
   const tw = ctx.measureText(name).width;
-  roundRect(ctx, 10, 17, tw + 12, 18, 5);
+  roundRect(ctx, 10, 17, tw + 10, 18, 5);
   ctx.fillStyle = color; ctx.fill();
-  ctx.fillStyle = "#0b0b0d"; ctx.fillText(name, 16, 30);
+  ctx.fillStyle = "#0b0b0d"; ctx.fillText(name, 15, 30);
   ctx.restore();
 }
 
@@ -116,7 +117,7 @@ export function Swarm() {
   const [speed, setSpeed] = useState(1);
   const [sound, setSound] = useState(false);
   const [tour, setTour] = useState(false);
-  const [status, setStatus] = useState("Scanning page…");
+  const [status, setStatus] = useState("Building");
   const speedRef = useRef(1);
   const tourRef = useRef(false);
   const soundRef = useRef<AudioContext | null>(null);
@@ -150,7 +151,7 @@ export function Swarm() {
 
     const agents: Agent[] = NAMES.slice(0, w < 640 ? 8 : 14).map((name, k) => ({
       name, color: COLORS[k % COLORS.length]!,
-      x: scrollX + rand(0, w), y: scrollY + h + rand(40, 200), fx: 0, fy: 0, tx: 0, ty: 0,
+      x: scrollX + rand(RULER + 20, w - 40), y: scrollY + rand(h * 0.2, h * 0.9), fx: 0, fy: 0, tx: 0, ty: 0,
       t0: 0, dur: 0, phase: "idle" as Phase,
     }));
     const ghosts: Ghost[] = [];
@@ -165,7 +166,7 @@ export function Swarm() {
       o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime + len + 0.02);
     };
 
-    let next = 0, done = false, raf = 0, last = performance.now(), start = -1, builtCount = 0, lastWander = 0;
+    let next = 0, done = false, raf = 0, last = performance.now(), builtCount = 0, lastWander = 0;
     let tourStarted = false, ending = false, reported = 0;
 
     const end = () => {
@@ -188,26 +189,8 @@ export function Swarm() {
       const dt = Math.min(64, t - last); last = t;
       const sp = speedRef.current;
       ctx.clearRect(0, 0, w, h);
-      if (start < 0) start = t;
-      const intro = t - start < INTRO_MS;
-
-      if (intro) {
-        // Agents circle the SW badge while the page is "scanned".
-        const cx = scrollX + w / 2, cy = scrollY + h / 2;
-        agents.forEach((a, i) => {
-          const ang = (i / agents.length) * Math.PI * 2 + (t - start) * 0.0016 * (1 + (i % 3) * 0.25);
-          const rad = 70 + (i % 4) * 26;
-          a.x += (cx + Math.cos(ang) * rad - a.x) * clamp(dt * 0.006, 0, 1);
-          a.y += (cy + Math.sin(ang) * rad * 0.75 - a.y) * clamp(dt * 0.006, 0, 1);
-        });
-        ctx.save();
-        roundRect(ctx, w / 2 - 30, h / 2 - 30, 60, 60, 10);
-        ctx.fillStyle = "#1b1b1f"; ctx.fill(); ctx.strokeStyle = "rgba(255,255,255,0.12)"; ctx.stroke();
-        ctx.fillStyle = "#f4f2ee"; ctx.font = "700 20px 'Plus Jakarta Sans', system-ui, sans-serif";
-        ctx.textAlign = "center"; ctx.fillText("SW", w / 2, h / 2 + 7);
-        ctx.restore();
-      } else {
-        if (!tourStarted) { tourStarted = true; setStatus("Building"); setTour(true); }
+      {
+        if (!tourStarted) { tourStarted = true; setTour(true); }
         const busy = agents.filter((a) => a.phase !== "idle").length;
         const maxActive = Math.min(agents.length, 3 + sp * 2);
         // Hand the next blocks in view to idle agents.
@@ -301,8 +284,8 @@ export function Swarm() {
       for (const a of agents) drawCursor(ctx, a.x - scrollX, a.y - scrollY, a.color, a.name);
       if (!done) raf = requestAnimationFrame(loop);
     };
-    // Start once webfonts are in (labels and the badge use them), but never wait more than 1.5 s.
-    void Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 1500))]).then(() => {
+    // Start once webfonts are in (labels and the badge use them), but never wait more than 0.6 s.
+    void Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 600))]).then(() => {
       if (!done) { last = performance.now(); raf = requestAnimationFrame(loop); }
     });
 
