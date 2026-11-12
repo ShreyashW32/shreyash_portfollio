@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://shreyashw32.github.io/shreyash_portfollio/sitemap.xml
