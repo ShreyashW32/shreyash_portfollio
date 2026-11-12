@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import portrait from "@/assets/shreyash_portrait.jpg.asset.json";
-import { Particles, Reveal, Typer } from "@/components/motion";
+import { Reveal, Typer } from "@/components/motion";
 import { Swarm } from "@/components/swarm";
 import { OpArt } from "@/components/opart";
 import { NavDock } from "@/components/nav";
@@ -132,7 +132,6 @@ export function Home() {
             <div className="grid-bg absolute inset-0 opacity-60" />
             <div className="hero-glow absolute inset-0 animate-glow" />
             <OpArt />
-            <Particles />
           </div>
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
             <svg data-build="" className="wordmark block w-full select-none" viewBox="0 0 1000 196" preserveAspectRatio="xMidYMid meet" aria-hidden>

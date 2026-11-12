@@ -166,8 +166,8 @@ export function Swarm() {
       o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime + len + 0.02);
     };
 
-    let next = 0, done = false, raf = 0, last = performance.now(), builtCount = 0, lastWander = 0;
-    let tourStarted = false, ending = false, reported = 0;
+    let next = 0, done = false, raf = 0, last = performance.now(), builtCount = 0;
+    let ending = false, reported = 0;
 
     const end = () => {
       if (done) return;
@@ -190,7 +190,6 @@ export function Swarm() {
       const sp = speedRef.current;
       ctx.clearRect(0, 0, w, h);
       {
-        if (!tourStarted) { tourStarted = true; setTour(true); }
         const busy = agents.filter((a) => a.phase !== "idle").length;
         const maxActive = Math.min(agents.length, 3 + sp * 2);
         // Hand the next blocks in view to idle agents.
@@ -246,17 +245,15 @@ export function Swarm() {
               a.x = r.x + Math.min(r.w, 40 + r.w * p); a.y = r.y + r.h * 0.55;
               if (Math.floor(t / 260) % 2) { ctx.fillStyle = a.color; ctx.fillRect(a.x - scrollX - 1, r.y - scrollY + 4, 2, Math.max(10, r.h - 8)); }
             }
-            if (p >= 1) { ghosts.push({ ...r, color: a.color, t0: t }); a.phase = "idle"; a.block = undefined; a.rect = undefined; a.t0 = t; a.dur = 0; }
+            if (p >= 1) { ghosts.push({ ...r, color: a.color, t0: t }); a.phase = "idle"; a.block = undefined; a.rect = undefined; a.t0 = t; a.dur = 0; a.tx = a.x; }
           } else {
-            // Idle agents drift around the build frontier.
-            if (t - lastWander > 900 || a.tx === 0) {
-              a.tx = scrollX + rand(RULER + 20, w - 40); a.ty = scrollY + rand(h * 0.25, h * 0.95);
-            }
-            a.x += (a.tx - a.x) * clamp(dt * 0.0022 * sp, 0, 1);
-            a.y += (a.ty - a.y) * clamp(dt * 0.0022 * sp, 0, 1);
+            // Nothing to build in view: leave the screen by dropping just below it, so the
+            // finished sections stay readable. New work further down brings them back up.
+            const k = clamp(dt * 0.005 * sp, 0, 1);
+            a.y += (scrollY + h + 80 - a.y) * k;
+            a.x += (clamp(a.tx || a.x, scrollX + RULER + 20, scrollX + w - 40) - a.x) * k;
           }
         }
-        if (t - lastWander > 900) lastWander = t;
 
         for (let i = ghosts.length - 1; i >= 0; i--) {
           const g = ghosts[i]!, p = (t - g.t0) / 420;
