@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["vite/client"],
+    "paths": {
+      "@/assets/shreyash_portrait.jpg.asset.json": ["./portrait-asset.ts"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["main.tsx", "portrait-asset.ts", "src/components/home.tsx", "src/components/nav.tsx", "src/components/swarm.tsx", "src/components/motion.tsx", "src/components/opart.tsx", "src/data/profile.ts"]
+}

@@ -128,10 +128,12 @@ export function Home() {
       <main id="top">
         {/* Hero */}
         <section className="relative overflow-hidden pt-20 pb-16 md:pt-24">
-          <div className="grid-bg absolute inset-0 opacity-60" />
-          <div className="hero-glow absolute inset-0 animate-glow" />
-          <OpArt />
-          <Particles />
+          <div className="swarm-hide absolute inset-0" aria-hidden>
+            <div className="grid-bg absolute inset-0 opacity-60" />
+            <div className="hero-glow absolute inset-0 animate-glow" />
+            <OpArt />
+            <Particles />
+          </div>
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
             <svg data-build="" className="wordmark block w-full select-none" viewBox="0 0 1000 196" preserveAspectRatio="xMidYMid meet" aria-hidden>
               <text x="0" y="188" fontSize="258" textLength="1000" lengthAdjust="spacingAndGlyphs">PORTFOLIO</text>

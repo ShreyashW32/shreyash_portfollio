@@ -159,3 +159,7 @@ html[data-swarm] [data-build][data-built] { clip-path: inset(0 0 -20% 0); opacit
 @utility contact-glow {
   background: radial-gradient(50% 60% at 50% 0%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 70%);
 }
+
+/* While the agents build the page, decorative layers stay dark; "Go live" fades them in. */
+.swarm-hide { transition: opacity 1.2s ease; }
+html[data-swarm] .swarm-hide { opacity: 0; }
