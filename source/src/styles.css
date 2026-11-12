@@ -5,7 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bebas Neue", "Arial Narrow", sans-serif;
+  --font-script: "Caveat", cursive;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -35,7 +37,7 @@
 
 :root {
   --radius: 0.5rem;
-  --background: oklch(0.13 0.005 260);
+  --background: oklch(0.115 0.004 260);
   --foreground: oklch(0.96 0.005 90);
   --card: oklch(0.17 0.006 260);
   --card-foreground: oklch(0.96 0.005 90);
@@ -114,3 +116,46 @@ html[data-swarm] [data-build][data-built] { clip-path: inset(0 0 -20% 0); opacit
 @utility depth-2 { transform: translate3d(calc(var(--mx, 0) * -22px), calc(var(--my, 0) * -16px), 0); transition: transform .3s ease-out; }
 @utility animate-pop { animation: pop .3s cubic-bezier(.2,.7,.2,1.4) both; }
 @keyframes pop { from { opacity: 0; transform: translate(-50%, 10px) scale(.9) } to { opacity: 1; transform: translate(-50%, 0) } }
+
+/* saai.pro-style surfaces: glass cards, badges, section tags, the outlined wordmark. */
+@utility glass {
+  background: color-mix(in oklab, var(--card) 72%, transparent);
+  border: 1px solid oklch(1 0 0 / 8%);
+  border-radius: 1rem;
+  backdrop-filter: blur(14px);
+  transition: border-color .3s ease, transform .3s ease, box-shadow .3s ease;
+}
+@utility glass-hover {
+  &:hover { border-color: color-mix(in oklab, var(--primary) 45%, transparent); transform: translateY(-3px); box-shadow: var(--shadow-glow); }
+}
+@utility badge {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-family: var(--font-mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
+  padding: .3rem .6rem; border-radius: .35rem;
+  color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 14%, transparent);
+  border: 1px solid color-mix(in oklab, var(--primary) 35%, transparent);
+}
+@utility chip {
+  font-family: var(--font-mono); font-size: .7rem;
+  padding: .3rem .55rem; border-radius: .35rem;
+  border: 1px solid oklch(1 0 0 / 12%);
+  background: oklch(1 0 0 / 4%);
+  color: var(--foreground);
+}
+@utility section-tag {
+  font-family: var(--font-mono); font-size: .7rem; letter-spacing: .22em; text-transform: uppercase; color: var(--primary);
+}
+@utility wordmark {
+  & text {
+    font-family: var(--font-display);
+    fill: color-mix(in oklab, var(--primary) 14%, var(--background));
+    stroke: color-mix(in oklab, var(--primary) 85%, transparent);
+    stroke-width: 1.4px;
+    paint-order: stroke;
+  }
+}
+@utility fade-bottom { mask-image: linear-gradient(to bottom, black 72%, transparent); }
+@utility contact-glow {
+  background: radial-gradient(50% 60% at 50% 0%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 70%);
+}
